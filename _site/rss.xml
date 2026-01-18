@@ -3,56 +3,121 @@
 
 
  <title>Jeff Park</title>
- <link href="https://jpark.fyi/rss.xml" rel="self"/>
- <link href="https://jpark.fyi/"/>
- <updated>2025-09-24T23:12:58-04:00</updated>
- <id>https://jpark.fyi</id>
+ <link href="http://localhost:4000/rss.xml" rel="self"/>
+ <link href="http://localhost:4000/"/>
+ <updated>2026-01-18T18:26:29-05:00</updated>
+ <id>http://localhost:4000</id>
  <author>
    <name></name>
  </author>
 
  
  <entry>
-   <title>Process over outcome   building antifragile identity</title>
-   <link href="https://jpark.fyi/process-over-outcome-building-antifragile-identity"/>
-   <updated>2025-09-24T23:12:58-04:00</updated>
-   <id>https://jpark.fyi/Process Over Outcome - Building Antifragile Identity</id>
-   <content type="html">&lt;h1 id=&quot;process-over-outcome-building-antifragile-identity&quot;&gt;Process Over Outcome: Building Antifragile Identity&lt;/h1&gt;
+   <title>In an ai world, crud is not enough</title>
+   <link href="http://localhost:4000/in-an-ai-world-crud-is-not-enough"/>
+   <updated>2026-01-18T18:26:29-05:00</updated>
+   <id>http://localhost:4000/In an AI World, CRUD is Not Enough</id>
+   <content type="html">&lt;p&gt;For the last 15 years, being a ‘good engineer’ mostly meant one thing:&lt;/p&gt;
 
-&lt;h2 id=&quot;core-thesis&quot;&gt;Core Thesis&lt;/h2&gt;
-&lt;p&gt;Why focusing on inputs creates more resilient self-concept - how process-oriented thinking builds antifragile identity that gets stronger under stress rather than breaking.&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Get good at CRUD&lt;/p&gt;
+&lt;/blockquote&gt;
 
-&lt;h2 id=&quot;key-notes-to-reference&quot;&gt;Key Notes to Reference&lt;/h2&gt;
+&lt;p&gt;This meant everything from the frontend, API endpoints, to the models down in the backend. You knew how to model data, wrap it in transactions, and expose them with clean APIs. In a web 2.0 world, that was enough.&lt;/p&gt;
 
-&lt;h3 id=&quot;literature-notes&quot;&gt;Literature Notes&lt;/h3&gt;
+&lt;p&gt;But the rise of &lt;strong&gt;AI agents&lt;/strong&gt; is quickly making this expertise obsolete. Replacing it are queues, events, graphs, and workflows. A new center of gravity has cometh, and the modern engineer must adapt.&lt;/p&gt;
+
+&lt;h2 id=&quot;crud-is-a-worldview-not-just-an-api-style&quot;&gt;CRUD is a worldview, not just an API style&lt;/h2&gt;
+
+&lt;p&gt;CRUD isnt’ just “create, read, update, delete.” It’s a way of thinking.&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;[[Trust the Process Framework]] - Systematic approach to process-focused development&lt;/li&gt;
-  &lt;li&gt;[[Career transitions require values alignment for psychological sustainability]] - How process orientation supports major life changes&lt;/li&gt;
+  &lt;li&gt;Work is short-lived&lt;/li&gt;
+  &lt;li&gt;Requests complete deterministically&lt;/li&gt;
+  &lt;li&gt;Failure is exceptional&lt;/li&gt;
+  &lt;li&gt;State is the primary abstraction&lt;/li&gt;
+  &lt;li&gt;Time is an implementation detail.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id=&quot;evergreen-notes&quot;&gt;Evergreen Notes&lt;/h3&gt;
+&lt;p&gt;But AI Agents don’t behave this way. They run for seconds, minutes, or hours. They fail partially and recover. They fan out to other tools and services. THey produce intermediate results. The processes get interrupted, resumed, or reidrected. They make progress even when nobody is watching.&lt;/p&gt;
+
+&lt;p&gt;In other words: agents live in time, not transactions.&lt;/p&gt;
+
+&lt;p&gt;CRUD doesn’t have a native way to express that something failed, but only halfway. It doesn’t tell you to try again later. It can’t resume from step 4. So we’ve faked it with status columns, retry flags, cron jobs, background jobs triggered by request-driven systems. And it’s worked until it doesn’t.&lt;/p&gt;
+
+&lt;h2 id=&quot;queues-model-reality-better-than-tables&quot;&gt;Queues model reality better than tables&lt;/h2&gt;
+
+&lt;p&gt;Queues, events, and workflows are built around a different premise:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;work is something that happens, not something that exists.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In a queue-first world:&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;[[Process-over-outcome builds resilient identity]] - The core principle of antifragile identity development&lt;/li&gt;
-  &lt;li&gt;[[Identity anchors; payoff pulls]] - How process becomes identity anchor while outcomes provide direction&lt;/li&gt;
-  &lt;li&gt;[[Track inputs, not outputs]] - The practical framework for process-focused living&lt;/li&gt;
-  &lt;li&gt;[[Service or devotion makes it worth it]] - How process orientation connects to meaning through service&lt;/li&gt;
+  &lt;li&gt;Time is explicit&lt;/li&gt;
+  &lt;li&gt;Failure is expected&lt;/li&gt;
+  &lt;li&gt;Retries are normal&lt;/li&gt;
+  &lt;li&gt;Partial progress is first-class&lt;/li&gt;
+  &lt;li&gt;Backpressure is visible&lt;/li&gt;
+  &lt;li&gt;Concurrency is intentional&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;potential-structure&quot;&gt;Potential Structure&lt;/h2&gt;
-&lt;ol&gt;
-  &lt;li&gt;Why outcome-focused identity is fragile (external validation, finite games)&lt;/li&gt;
-  &lt;li&gt;Process as identity anchor - who you are vs what you achieve&lt;/li&gt;
-  &lt;li&gt;How process-orientation creates antifragility (learning from setbacks)&lt;/li&gt;
-  &lt;li&gt;Practical frameworks for shifting from outcome to process focus&lt;/li&gt;
-  &lt;li&gt;Case studies of process-oriented success&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;This isn’t accidental. Queues exist because the real world is messy, and agentic systems are messy by default. They’re systems modeled after human thinking after all, and agentic systems are nowhere near as sophisticated as how humans think. They’re just faster at the simpler tasks.&lt;/p&gt;
 
-&lt;h2 id=&quot;related-ideas&quot;&gt;Related Ideas&lt;/h2&gt;
+&lt;h2 id=&quot;why-this-is-surfacing-now&quot;&gt;Why this is surfacing now&lt;/h2&gt;
+
+&lt;p&gt;For years, we could get away with bending CRUD systems into shape.&lt;/p&gt;
+
+&lt;p&gt;Rails + Sidekiq
+Django + Celery
+DB + Redis + “just one more worker”&lt;/p&gt;
+
+&lt;p&gt;But AI Agents are pushing these systems past their comfort zones. I’ve seen it at GitLab and I’ve heard about problems that companies have had with Celery. They just aren’t natively built for&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;Connect to identity work - process as foundation for stable identity&lt;/li&gt;
-  &lt;li&gt;Link to service orientation - process focus enables sustainable devotion&lt;/li&gt;
-  &lt;li&gt;Tie to mental models for engineers - systems thinking applied to personal development&lt;/li&gt;
+  &lt;li&gt;Long-lived streams&lt;/li&gt;
+  &lt;li&gt;Event-driven orchestration&lt;/li&gt;
+  &lt;li&gt;Stateful async workflows&lt;/li&gt;
+  &lt;li&gt;Non-deterministic execution&lt;/li&gt;
+  &lt;li&gt;Human-in-the-loop interruption&lt;/li&gt;
 &lt;/ul&gt;
+
+&lt;p&gt;You can feel the strain immediately. Threads get tied up, reties get subtle and race conditions multiply. Not to leave out that observability becomes guesswork.&lt;/p&gt;
+
+&lt;p&gt;It makes engineering look bad, but the architecture is lying about what the system really is.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-right-mental-model-control-plane-vs-execution-plane&quot;&gt;The Right Mental Model: Control plane vs Execution Plane&lt;/h2&gt;
+
+&lt;p&gt;It’s not an either/or choice. The emerging pattern involves both CRUD and Queues/Workflows.&lt;/p&gt;
+
+&lt;p&gt;CRUD = control plane
+Queues / workflows = execution plane&lt;/p&gt;
+
+&lt;p&gt;The control plae handles configs, auth, permissions, canonical state. It answers the question: what is true?&lt;/p&gt;
+
+&lt;p&gt;The execution plane handles agents, tasks, retries, streaming progress. It answers the question: what is happening?&lt;/p&gt;
+
+&lt;p&gt;And all AI agents live almost entirely in the execution plane.&lt;/p&gt;
+
+&lt;h2 id=&quot;this-is-a-skill-shift-not-a-tool-shift&quot;&gt;This is a skill shift, not a tool shift.&lt;/h2&gt;
+
+&lt;p&gt;To step into this new world, I’ve noticed that I have had to take on a mindset shift. It isn’t so much “learning Kafka” or “switching frameworks” as it once was when we all had to learn React or GQL.&lt;/p&gt;
+
+&lt;p&gt;It’s about learning to think in:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;state machines instead of controllers&lt;/li&gt;
+  &lt;li&gt;messages instead of mutations&lt;/li&gt;
+  &lt;li&gt;idempotency instead of transactions&lt;/li&gt;
+  &lt;li&gt;compensation instead of rollback&lt;/li&gt;
+  &lt;li&gt;visibility instead of hope.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Engineers who stay CRUD-only will still be useful, but I suspect a lot of these AI coding assistants will get really good at writing code for these systems. So these engineers will be increasingly confined to the edges of the systems.&lt;/p&gt;
+
+&lt;p&gt;Understanding queues, events, and workflows will shape the core. Flow mastery will define the next era of software because AI systems will force us to model reality as it actually behaves. Not atomically, but asynchronously.&lt;/p&gt;
 </content>
  </entry>
  
