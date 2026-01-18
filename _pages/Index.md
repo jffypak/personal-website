@@ -5,4 +5,4 @@ id: home
 permalink: /
 ---
 
-## This is me. This is what I think about.
+## What I've been thinking about...
