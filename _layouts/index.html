@@ -11,6 +11,7 @@ layout: default
 </article>
 <br>
 
+{% assign now = 'now' | date: '%s' %}
 {% assign pages = site.directory | sort: 'title' %}
 <table>
   {% comment %}
@@ -23,6 +24,9 @@ layout: default
   </thead>
   {% endcomment %}
 {% for page in pages %}
+  {% unless page.publish_date %}{% continue %}{% endunless %}
+  {% assign pub = page.publish_date | date: '%s' %}
+  {% if pub > now %}{% continue %}{% endif %}
   <tr>
     <td><a href="{{ page.url }}" class="internal-link">{{ page.title }}</a></td>
     <td>{% for tag in page.tags %}

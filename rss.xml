@@ -4,6 +4,7 @@ layout: null
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 {% assign posts = site.directory  %}
+{% assign now = 'now' | date: '%s' %}
 
  <title>{{ site.title }}</title>
  <link href="{{ site.url }}{{ site.baseurl }}/rss.xml" rel="self"/>
@@ -15,6 +16,7 @@ layout: null
  </author>
 
  {% for post in posts %}
+ {% unless post.publish_date %}{% continue %}{% endunless %}{% assign pub = post.publish_date | date: '%s' %}{% if pub > now %}{% continue %}{% endif %}
  <entry>
    <title>{{ post.title }}</title>
    <link href="{{ site.url }}{{ site.baseurl }}{{ post.url }}"/>

@@ -2,6 +2,7 @@
 layout: null
 ---
 {% assign posts = site.directory %}
+{% assign now = 'now' | date: '%s' %}
 {
     "version": "https://jsonfeed.org/version/1",
     "title": {{ site.name | smartify | jsonify }},
@@ -11,6 +12,7 @@ layout: null
     "expired": false,
     "items": [
 {% for post in posts %}
+{% unless post.publish_date %}{% continue %}{% endunless %}{% assign pub = post.publish_date | date: '%s' %}{% if pub > now %}{% continue %}{% endif %}
         {
             "id": "{{ post.id }}",
             "title": {{ post.title | smartify | jsonify }},

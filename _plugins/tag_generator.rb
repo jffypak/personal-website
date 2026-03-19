@@ -3,7 +3,11 @@ module Jekyll
     safe true
 
     def generate(site)
-      tags = site.documents.flat_map { |post| post.data['tags'] || [] }.to_set
+      today = Date.today
+      tags = site.documents.select { |doc|
+        pd = doc.data['publish_date']
+        pd.nil? || (pd.is_a?(Date) ? pd : Date.parse(pd.to_s)) <= today
+      }.flat_map { |post| post.data['tags'] || [] }.to_set
       tags.each do |tag|
         site.pages << TagPage.new(site, site.source, tag)
       end
