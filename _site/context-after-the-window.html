@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="I'm Jeff Park. Welcome to my website.">
   
-  <meta property="article:published_time" content="2026-06-25T01:02:22-04:00" />
+  <meta property="article:published_time" content="2026-06-25T01:23:26-04:00" />
   <meta property="article:author"  content="https://jffypak.com/" />
   
 
@@ -124,13 +124,13 @@
   <li><strong>Metadata</strong>: scope, granularity, freshness, confidence</li>
 </ul>
 
-<div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span><span class="nt">Architecture</span><span class="o">]</span>
-   <span class="err">├─</span> <span class="o">[</span><span class="nt">Control</span> <span class="nt">vs</span> <span class="nt">Execution</span><span class="o">]</span>
-   <span class="err">│</span>     <span class="err">├─</span> <span class="o">[</span><span class="nt">Streaming</span><span class="o">]</span>
-   <span class="err">│</span>     <span class="err">└─</span> <span class="o">[</span><span class="nt">Queues</span><span class="o">]</span>
-   <span class="err">└─</span> <span class="o">[</span><span class="nt">Memory</span><span class="o">]</span>
-         <span class="err">├─</span> <span class="o">[</span><span class="nt">Branching</span><span class="o">]</span>
-         <span class="err">└─</span> <span class="o">[</span><span class="nt">Summaries</span><span class="o">]</span>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[Architecture]
+   ├─ [Control vs Execution]
+   │     ├─ [Streaming]
+   │     └─ [Queues]
+   └─ [Memory]
+         ├─ [Branching]
+         └─ [Summaries]
 </code></pre></div></div>
 
 <p>Each topic node owns:</p>
@@ -167,7 +167,6 @@
   </span><span class="nl">"branch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alternative-B"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"milestones"</span><span class="w">
 </span><span class="p">}</span><span class="w">
-
 </span></code></pre></div></div>
 
 <p>This says:</p>

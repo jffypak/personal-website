@@ -6,7 +6,7 @@
  <title>Jeff Park</title>
  <link href="https://jffypak.com/rss.xml" rel="self"/>
  <link href="https://jffypak.com/"/>
- <updated>2026-06-25T01:02:22-04:00</updated>
+ <updated>2026-06-25T01:23:26-04:00</updated>
  <id>https://jffypak.com</id>
  <author>
    <name></name>
@@ -17,7 +17,7 @@
  <entry>
    <title>Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection</title>
    <link href="https://jffypak.com/context-after-the-window"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/Context After the Window</id>
    <content type="html">&lt;p&gt;If memory answers &lt;strong&gt;what is preserved&lt;/strong&gt;, context answers &lt;strong&gt;what is activated&lt;/strong&gt;.&lt;/p&gt;
 
@@ -68,13 +68,13 @@
   &lt;li&gt;&lt;strong&gt;Metadata&lt;/strong&gt;: scope, granularity, freshness, confidence&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-css highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Architecture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-   &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Control&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;vs&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;Execution&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-   &lt;span class=&quot;err&quot;&gt;│&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Streaming&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-   &lt;span class=&quot;err&quot;&gt;│&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Queues&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-   &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Memory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-         &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Branching&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-         &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Summaries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;div class=&quot;language-text highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[Architecture]
+   ├─ [Control vs Execution]
+   │     ├─ [Streaming]
+   │     └─ [Queues]
+   └─ [Memory]
+         ├─ [Branching]
+         └─ [Summaries]
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Each topic node owns:&lt;/p&gt;
@@ -111,7 +111,6 @@
   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;branch&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;alternative-B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;time&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;milestones&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
 &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;This says:&lt;/p&gt;
@@ -340,9 +339,27 @@ They fail because we give them context the way machines prefer—not the way min
  
  
  <entry>
+   <title>Ego Death</title>
+   <link href="https://jffypak.com/ego-death"/>
+   <updated>2026-06-25T01:23:26-04:00</updated>
+   <id>https://jffypak.com/Ego Death</id>
+   <content type="html">&lt;p&gt;I’ve been facing some ego death recently and it’s making me very uncomfortable.&lt;/p&gt;
+
+&lt;p&gt;I’m frustrated that I have to change and I’m frustrated that I have to do so for the rest of my life.&lt;/p&gt;
+
+&lt;p&gt;But this isn’t frustration towards the work. It’s grief for the part of me that lives off of potential and the part of me that got me to where I’m at today.&lt;/p&gt;
+
+&lt;p&gt;I have to change for my partner. I have to change and act while I’m not ready for my own self progression. I’m so addicted to insight and being the man who could do great things. But I want to be a man of action and the man who did do the thing.&lt;/p&gt;
+
+&lt;p&gt;Here’s my first attempt&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
    <title>In an AI World, CRUD is Not Enough</title>
    <link href="https://jffypak.com/in-an-ai-world-crud-is-not-enough"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/In an AI World, CRUD is Not Enough</id>
    <content type="html">&lt;p&gt;For the last 15 years, being a ‘good engineer’ mostly meant one thing:&lt;/p&gt;
 
@@ -452,7 +469,7 @@ Queues / workflows = execution plane&lt;/p&gt;
  <entry>
    <title>Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems</title>
    <link href="https://jffypak.com/memory-after-crud"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/Memory After CRUD</id>
    <content type="html">&lt;p&gt;If the philosophical claim is that &lt;strong&gt;agents force us to rethink memory&lt;/strong&gt;, the technical reality is this:&lt;/p&gt;
 
@@ -849,7 +866,7 @@ Pointers decide what matters now.&lt;/strong&gt;&lt;/p&gt;
  <entry>
    <title>Money Is the New Religion (And It's a Bad One)</title>
    <link href="https://jffypak.com/money-is-the-new-religion-and-its-a-bad-one"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/Money Is the New Religion (And Its a Bad One)</id>
    <content type="html">&lt;p&gt;I’ve been reading Paul Kingsnorth’s &lt;em&gt;Against the Machine&lt;/em&gt;, and one idea from it has been rattling around my head for weeks. It’s the kind of idea that, once you see it, you can’t unsee it. It reframes everything — politics, tech, the general feeling that something is deeply off.&lt;/p&gt;
 
@@ -919,7 +936,7 @@ Pointers decide what matters now.&lt;/strong&gt;&lt;/p&gt;
  <entry>
    <title>The Control Plane and Execution Plane Split (Why AI Systems Are Forcing a New Architecture)</title>
    <link href="https://jffypak.com/the-control-plane-and-execution-plane-split"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/The Control Plane and Execution Plane Split</id>
    <content type="html">&lt;p&gt;Most engineering pain in AI systems today comes from a single mistake:&lt;/p&gt;
 
@@ -1342,7 +1359,7 @@ Control is staying behind.&lt;/strong&gt;&lt;/p&gt;
  <entry>
    <title>Why Rails Feels Painful in an Agentic World</title>
    <link href="https://jffypak.com/why-rails-feels-painful-in-an-agentic-world"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/Why Rails Feels Painful in an Agentic World</id>
    <content type="html">&lt;p&gt;Rails didn’t get worse.
 The world just moved.&lt;/p&gt;
@@ -1663,7 +1680,7 @@ Rails is optimized for pretending those things are edge cases.&lt;/strong&gt;&lt
  <entry>
    <title>Why Streaming Breaks Traditional Web Assumptions</title>
    <link href="https://jffypak.com/why-streaming-breaks-traditional-web-assumptions"/>
-   <updated>2026-06-25T01:02:22-04:00</updated>
+   <updated>2026-06-25T01:23:26-04:00</updated>
    <id>https://jffypak.com/Why Streaming Breaks Traditional Web Assumptions</id>
    <content type="html">&lt;p&gt;Streaming doesn’t introduce new problems.
 It exposes the ones we’ve been ignoring.&lt;/p&gt;
