@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <title>Why Streaming Breaks Traditional Web Assumptions &mdash; Jeff Park</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="I'm Jeff Park. Welcome to my website.">
+  
+  <meta property="article:published_time" content="2026-06-25T01:02:22-04:00" />
+  <meta property="article:author"  content="https://jffypak.com/" />
+  
+
+  <link rel="canonical" href="https://jffypak.com/why-streaming-breaks-traditional-web-assumptions" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:site"        content="@" />
+  <meta name="twitter:creator"     content="@" />
+  <meta name="twitter:title"       content="Why Streaming Breaks Traditional Web Assumptions" />
+  <meta name="twitter:description" content="I'm Jeff Park. Welcome to my website.">
+  <meta name="twitter:image"       content="https://jffypak.com/assets/cover.png" />
+
+  <meta property="og:site_name"    content="Jeff Park">
+  <meta property="og:url"          content="https://jffypak.com/why-streaming-breaks-traditional-web-assumptions" />
+  <meta property="og:title"        content="Why Streaming Breaks Traditional Web Assumptions" />
+  <meta property="og:description"  content="I'm Jeff Park. Welcome to my website.">
+  <meta property="og:type"         content="article">
+  <meta property="og:image"        content="https://jffypak.com/assets/cover.png" />
+
+  <script defer data-domain="jffypak.com" src="https://plausible.io/js/script.outbound-links.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+</head>
+  <body>
+    <script>
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.querySelector('body').classList.add('theme-dark')
+      }
+    </script>
+
+    <nav><div class="header flex align-center">
+    <span class="flex-grow">
+       <a class="internal-link plain" href="/">Jeff Park</a>
+    </span>
+    <span class="flex-shrink ssr">
+      <a href="/about" class="muted plain">About</a>
+    </span>
+    <span id="theme-toggle" title="Toggle dark mode">
+        <div class="theme-toggle-slide"></div>
+        <div class="theme-toggle-switch"></div>
+    </span>
+</div></nav>
+
+    <div class="wrapper">
+      <main><article>
+  <div>
+    <h1>Why Streaming Breaks Traditional Web Assumptions</h1>
+    <table class="sst" style="max-width:20em">
+      <tr>
+        <td class="muted">Date</td>
+        <td>2026-06-25</td>
+      </tr>
+      
+      <tr>
+        <td class="muted">Tags</td>
+        <td class="tags">
+        
+            <a href="/tag/coding/" class="tag">#coding</a>
+        
+            <a href="/tag/ai-agents/" class="tag">#ai-agents</a>
+        
+        </td>
+      </tr>
+      
+    </table>
+    <content>
+      <p>Streaming doesn’t introduce new problems.
+It exposes the ones we’ve been ignoring.</p>
+
+<p>For most of the web’s history, systems were built around a simple, comforting lie:</p>
+
+<blockquote>
+  <p>A request comes in.
+Some work happens.
+A response goes out.
+The system rests.</p>
+</blockquote>
+
+<p>Streaming breaks that lie — not because it’s exotic, but because it’s <em>honest</em> about how work actually happens.</p>
+
+<p>AI agents, real-time logs, progress updates, token streams, and live diffs don’t fit neatly inside the old mental model. And once you introduce streaming, a lot of familiar assumptions quietly collapse.</p>
+
+<hr />
+
+<h2 id="the-traditional-web-assumption-work-is-atomic">The Traditional Web Assumption: Work Is Atomic</h2>
+
+<p>Classic web architectures assume that work is:</p>
+
+<ul>
+  <li>Short-lived</li>
+  <li>Bounded</li>
+  <li>Synchronous</li>
+  <li>Completed before the response is sent</li>
+</ul>
+
+<p>Even background jobs are often treated as:</p>
+
+<blockquote>
+  <p>“The same request — just later.”</p>
+</blockquote>
+
+<p>Streaming refuses to play along.</p>
+
+<p>The moment you stream, you admit:</p>
+
+<ul>
+  <li>The work is ongoing</li>
+  <li>The outcome is not yet known</li>
+  <li>Partial results are meaningful</li>
+  <li>Time matters</li>
+</ul>
+
+<p>That single admission changes everything.</p>
+
+<hr />
+
+<h2 id="streaming-makes-time-a-first-class-concept">Streaming Makes Time a First-Class Concept</h2>
+
+<p>In traditional web apps, time is mostly invisible:</p>
+
+<ul>
+  <li>Requests are “fast” or “slow”</li>
+  <li>Background jobs are “queued” or “done”</li>
+  <li>Delays are hidden behind spinners</li>
+</ul>
+
+<p>Streaming makes time explicit.</p>
+
+<p>When you stream:</p>
+
+<ul>
+  <li>You see progress</li>
+  <li>You feel latency</li>
+  <li>You notice pauses</li>
+  <li>You observe stalls and retries</li>
+</ul>
+
+<p>This is uncomfortable for systems designed to pretend time doesn’t exist.</p>
+
+<p>CRUD frameworks are optimized to answer:</p>
+
+<blockquote>
+  <p>“What is the current state?”</p>
+</blockquote>
+
+<p>Streaming forces you to answer:</p>
+
+<blockquote>
+  <p>“What is happening <em>right now</em>?”</p>
+</blockquote>
+
+<p>Those are different questions.</p>
+
+<hr />
+
+<h2 id="streaming-breaks-the-request-boundary">Streaming Breaks the Request Boundary</h2>
+
+<p>The request boundary is sacred in traditional web frameworks.</p>
+
+<p>It defines:</p>
+
+<ul>
+  <li>Resource allocation</li>
+  <li>Concurrency</li>
+  <li>Error handling</li>
+  <li>Observability</li>
+  <li>Capacity planning</li>
+</ul>
+
+<p>Streaming punches a hole straight through it.</p>
+
+<p>A streamed response:</p>
+
+<ul>
+  <li>Keeps connections open</li>
+  <li>Ties up workers or threads</li>
+  <li>Lives longer than typical requests</li>
+  <li>Overlaps with other work</li>
+  <li>Cannot be “rolled back”</li>
+</ul>
+
+<p>This is why streaming inside request-oriented frameworks feels fragile.</p>
+
+<p>The framework is still asking:</p>
+
+<blockquote>
+  <p>“When does this request finish?”</p>
+</blockquote>
+
+<p>Streaming answers:</p>
+
+<blockquote>
+  <p>“It doesn’t. It <em>progresses</em>.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="streaming-turns-failure-from-an-exception-into-a-state">Streaming Turns Failure from an Exception into a State</h2>
+
+<p>In a non-streaming world:</p>
+
+<ul>
+  <li>Success = response returned</li>
+  <li>Failure = exception or error code</li>
+</ul>
+
+<p>Streaming breaks this binary.</p>
+
+<p>Failures become:</p>
+
+<ul>
+  <li>Partial output</li>
+  <li>Gaps in the stream</li>
+  <li>Retries mid-execution</li>
+  <li>Degraded progress</li>
+  <li>Eventual success after visible failure</li>
+</ul>
+
+<p>You can’t hide failure anymore — the user sees it happen.</p>
+
+<p>This is why streaming systems require:</p>
+
+<ul>
+  <li>Idempotency</li>
+  <li>Resume semantics</li>
+  <li>Explicit state transitions</li>
+  <li>Clear ownership of retries</li>
+</ul>
+
+<p>Traditional web stacks were not designed for this level of honesty.</p>
+
+<hr />
+
+<h2 id="streaming-exposes-backpressure">Streaming Exposes Backpressure</h2>
+
+<p>Backpressure is always there.
+Streaming just makes it visible.</p>
+
+<p>When you stream:</p>
+
+<ul>
+  <li>Slow consumers slow producers</li>
+  <li>Overloaded systems stall</li>
+  <li>Congestion propagates outward</li>
+</ul>
+
+<p>In request/response systems, backpressure is masked:</p>
+
+<ul>
+  <li>Requests time out</li>
+  <li>Queues silently grow</li>
+  <li>Systems fall over abruptly</li>
+</ul>
+
+<p>Streaming forces you to confront:</p>
+
+<ul>
+  <li>How many streams can we handle?</li>
+  <li>What happens when clients are slow?</li>
+  <li>Who owns flow control?</li>
+</ul>
+
+<p>These questions don’t go away if you ignore them.
+Streaming just stops letting you.</p>
+
+<hr />
+
+<h2 id="streaming-collapses-the-illusion-of-statelessness">Streaming Collapses the Illusion of “Statelessness”</h2>
+
+<p>Statelessness works when:</p>
+
+<ul>
+  <li>Requests are independent</li>
+  <li>Responses are final</li>
+  <li>Context is short-lived</li>
+</ul>
+
+<p>Streaming is inherently stateful:</p>
+
+<ul>
+  <li>There is a “before” and “after”</li>
+  <li>Progress accumulates</li>
+  <li>Order matters</li>
+  <li>Interruptions matter</li>
+</ul>
+
+<p>Once you stream, you’re already managing state — whether you admit it or not.</p>
+
+<p>The difference is whether that state is:</p>
+
+<ul>
+  <li>Explicit and observable
+  or</li>
+  <li>Implicit and scattered across threads, jobs, and retries</li>
+</ul>
+
+<p>Streaming punishes the second approach.</p>
+
+<hr />
+
+<h2 id="why-streaming-feels-so-painful-in-traditional-web-frameworks">Why Streaming Feels So Painful in Traditional Web Frameworks</h2>
+
+<p>Frameworks like Rails, Django, and Express aren’t broken.</p>
+
+<p>They’re optimized for a world where:</p>
+
+<ul>
+  <li>Work finishes quickly</li>
+  <li>Responses are discrete</li>
+  <li>Time is abstracted away</li>
+  <li>Failure is rare</li>
+</ul>
+
+<p>Streaming violates all of that.</p>
+
+<p>So you see symptoms:</p>
+
+<ul>
+  <li>Thread exhaustion</li>
+  <li>Worker starvation</li>
+  <li>Awkward async hacks</li>
+  <li>Ad-hoc buffering</li>
+  <li>“Just one more queue”</li>
+</ul>
+
+<p>The pain isn’t accidental.
+It’s diagnostic.</p>
+
+<hr />
+
+<h2 id="streaming-reveals-the-need-for-an-execution-plane">Streaming Reveals the Need for an Execution Plane</h2>
+
+<p>This is where the Control Plane / Execution Plane split becomes unavoidable.</p>
+
+<p>Streaming belongs to the <strong>execution plane</strong>:</p>
+
+<ul>
+  <li>Where work runs</li>
+  <li>Where progress happens</li>
+  <li>Where time is real</li>
+  <li>Where failure is expected</li>
+</ul>
+
+<p>Trying to host streaming in the control plane leads to:</p>
+
+<ul>
+  <li>Capacity collapse</li>
+  <li>Complexity explosions</li>
+  <li>Hidden coupling</li>
+</ul>
+
+<p>Once execution is separate, streaming stops being scary.</p>
+
+<p>It becomes just another event source.</p>
+
+<hr />
+
+<h2 id="why-ai-made-this-impossible-to-ignore">Why AI Made This Impossible to Ignore</h2>
+
+<p>We’ve had streaming before:</p>
+
+<ul>
+  <li>Chat</li>
+  <li>Notifications</li>
+  <li>Logs</li>
+</ul>
+
+<p>AI made it unavoidable because:</p>
+
+<ul>
+  <li>Token streaming is the <em>default</em></li>
+  <li>Long-running tasks are normal</li>
+  <li>Partial output is valuable</li>
+  <li>Users expect visibility, not spinners</li>
+</ul>
+
+<p>AI didn’t invent streaming.</p>
+
+<p>It just removed our ability to pretend we didn’t need it.</p>
+
+<hr />
+
+<h2 id="the-deeper-truth">The Deeper Truth</h2>
+
+<p>Streaming doesn’t break systems.</p>
+
+<blockquote>
+  <p><strong>Streaming reveals whether your system was telling the truth about how it works.</strong></p>
+</blockquote>
+
+<p>If your architecture assumes:</p>
+
+<ul>
+  <li>Instant completion</li>
+  <li>Atomic success</li>
+  <li>Invisible time</li>
+</ul>
+
+<p>Streaming will hurt.</p>
+
+<p>If your architecture already models:</p>
+
+<ul>
+  <li>Flow</li>
+  <li>Progress</li>
+  <li>Failure</li>
+  <li>Time</li>
+</ul>
+
+<p>Streaming feels natural.</p>
+
+<hr />
+
+<h2 id="the-takeaway">The Takeaway</h2>
+
+<p>The future web isn’t “real-time” because it’s trendy.</p>
+
+<p>It’s real-time because:</p>
+
+<ul>
+  <li>Systems act autonomously</li>
+  <li>Work unfolds over time</li>
+  <li>Users want to see what’s happening</li>
+  <li>And pretending otherwise no longer works</li>
+</ul>
+
+<p>Streaming is not a feature.</p>
+
+<p>It’s a forcing function.</p>
+
+    </content>
+  </div>
+</article>
+</main>
+      <footer><div class="wrap faint" style="display: flex; align-items: center;">
+  <a href="https://jffypak.com" class="plain ssr">
+    <img
+      src="/assets/logo.png"
+      alt="Jeff Park"
+      width="40"
+      height="40"
+      style="border-radius:50%; background:#FFE1C5"
+    />
+    </a>
+  <a href="https://github.com/jffypak" class="muted ssr" target="_blank">GitHub</a>
+  <a href="https://www.instagram.com/_tribecalledjeff/" class="muted" target="_blank">Instagram</a>
+</div></footer>
+    </div>
+
+    <script>
+    var darkMode = document.querySelector("#theme-toggle");
+
+    darkMode.addEventListener("click", function () {
+      document.body.classList.toggle("theme-dark");
+
+      let theme = "light";
+      if (document.body.classList.contains("theme-dark")) {
+        theme = "dark";
+      }
+      localStorage.setItem("theme", theme);
+    });
+    </script>
+
+    
+  </body>
+</html>

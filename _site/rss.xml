@@ -2,21 +2,348 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
 
+
  <title>Jeff Park</title>
- <link href="http://localhost:4000/rss.xml" rel="self"/>
- <link href="http://localhost:4000/"/>
- <updated>2026-01-18T18:37:47-05:00</updated>
- <id>http://localhost:4000</id>
+ <link href="https://jffypak.com/rss.xml" rel="self"/>
+ <link href="https://jffypak.com/"/>
+ <updated>2026-06-25T01:02:22-04:00</updated>
+ <id>https://jffypak.com</id>
  <author>
    <name></name>
  </author>
 
  
+ 
+ <entry>
+   <title>Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection</title>
+   <link href="https://jffypak.com/context-after-the-window"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/Context After the Window</id>
+   <content type="html">&lt;p&gt;If memory answers &lt;strong&gt;what is preserved&lt;/strong&gt;, context answers &lt;strong&gt;what is activated&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Most agent systems today conflate the two by treating context as a sliding window over history. That approach scales tokens, not cognition. To scale agents, we need context to become &lt;strong&gt;structured, addressable, and selectable&lt;/strong&gt;—much closer to how humans think.&lt;/p&gt;
+
+&lt;p&gt;This essay lays out the technical primitives that make that possible.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-problem-with-bottom-up-context&quot;&gt;The Problem with Bottom-Up Context&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Bottom-up context&lt;/strong&gt; looks like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-lua highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;too&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;large&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;summarize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This assumes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Chronology ≈ relevance&lt;/li&gt;
+  &lt;li&gt;Summaries preserve intent&lt;/li&gt;
+  &lt;li&gt;One linear past is enough&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;At scale, it fails because relevance is &lt;strong&gt;situational&lt;/strong&gt;, not temporal.&lt;/p&gt;
+
+&lt;p&gt;Agents need &lt;strong&gt;top-down context&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Start from a goal → select topics → choose granularity → pull details.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That requires new data structures.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;core-primitive-1-topic-graphs-not-logs&quot;&gt;Core Primitive #1: Topic Graphs (Not Logs)&lt;/h2&gt;
+
+&lt;p&gt;Replace “conversation = list” with &lt;strong&gt;conversation = graph of topics&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;topic-graph&quot;&gt;Topic Graph&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Nodes&lt;/strong&gt;: topics (e.g., &lt;em&gt;Streaming&lt;/em&gt;, &lt;em&gt;Rails&lt;/em&gt;, &lt;em&gt;Memory&lt;/em&gt;, &lt;em&gt;Branching&lt;/em&gt;)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Edges&lt;/strong&gt;: relationships (depends_on, refines, contrasts_with)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Metadata&lt;/strong&gt;: scope, granularity, freshness, confidence&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-css highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Architecture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+   &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Control&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;vs&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;Execution&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+   &lt;span class=&quot;err&quot;&gt;│&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Streaming&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+   &lt;span class=&quot;err&quot;&gt;│&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Queues&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+   &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Memory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+         &lt;span class=&quot;err&quot;&gt;├─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Branching&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+         &lt;span class=&quot;err&quot;&gt;└─&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;Summaries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Each topic node owns:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Its own internal history (events, notes, artifacts)&lt;/li&gt;
+  &lt;li&gt;Its own summaries at multiple resolutions&lt;/li&gt;
+  &lt;li&gt;Pointers to relevant branches&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Key insight:&lt;/strong&gt; Topics are the unit of &lt;em&gt;meaningful context&lt;/em&gt;, not messages.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;core-primitive-2-semantic-pointers-addressing-relevance&quot;&gt;Core Primitive #2: Semantic Pointers (Addressing Relevance)&lt;/h2&gt;
+
+&lt;p&gt;A &lt;strong&gt;semantic pointer&lt;/strong&gt; is a reference to &lt;em&gt;where&lt;/em&gt; and &lt;em&gt;how&lt;/em&gt; to read from the topic graph.&lt;/p&gt;
+
+&lt;p&gt;A pointer specifies:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Topic(s)&lt;/strong&gt;: which nodes matter&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Resolution&lt;/strong&gt;: zoom level (overview → detail)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Branch&lt;/strong&gt;: which alternative path&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Temporal slice&lt;/strong&gt;: entire history vs recent vs milestone&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Confidence&lt;/strong&gt; (optional): provisional vs canonical&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Example pointer:&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;topics&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Memory/Branching&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;resolution&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;mid&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;branch&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;alternative-B&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;time&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;milestones&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“Load the branching-memory topic, mid-level detail, from branch B, focusing on key moments.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Pointers decouple &lt;strong&gt;storage&lt;/strong&gt; from &lt;strong&gt;activation&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;core-primitive-3-multi-resolution-summaries-zoom-levels&quot;&gt;Core Primitive #3: Multi-Resolution Summaries (Zoom Levels)&lt;/h2&gt;
+
+&lt;p&gt;Summaries shouldn’t overwrite; they should &lt;strong&gt;stack&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;For each topic, maintain summaries at multiple resolutions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;L0 (Index)&lt;/strong&gt;: 1–2 sentences, purpose &amp;amp; scope&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;L1 (Overview)&lt;/strong&gt;: paragraph-level, key claims&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;L2 (Working)&lt;/strong&gt;: bullets, tradeoffs, open questions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;L3 (Raw)&lt;/strong&gt;: events, messages, artifacts&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;Topic&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Streaming&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;L0&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Streaming&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;exposes&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;and&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;progress.&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;L1&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Why&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;streaming&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;breaks&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;request&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;boundaries...&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;L2&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bullets, examples, failure modes&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;L3&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raw logs, diffs, messages&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Rule:&lt;/strong&gt; summaries are &lt;em&gt;derived nodes&lt;/em&gt;, never destructive replacements.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;core-primitive-4-context-assembly-top-down&quot;&gt;Core Primitive #4: Context Assembly (Top-Down)&lt;/h2&gt;
+
+&lt;p&gt;Context is assembled &lt;strong&gt;on demand&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;inputs&quot;&gt;Inputs&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Current goal / question&lt;/li&gt;
+  &lt;li&gt;Active topic(s)&lt;/li&gt;
+  &lt;li&gt;Desired depth&lt;/li&gt;
+  &lt;li&gt;Token budget&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;algorithm-conceptual&quot;&gt;Algorithm (Conceptual)&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Goal → Topic Selection&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Classify goal into topics (embedding + graph proximity)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Topic → Resolution Choice&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Decide zoom (overview vs detail)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Branch Selection&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Choose branch(es) consistent with goal&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Budget Allocation&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Allocate tokens per topic by importance&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Assembly&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Pull summaries/artifacts via pointers&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Validation&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;Ensure coherence; add glue if needed&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This is &lt;strong&gt;planning&lt;/strong&gt;, not concatenation.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;context-selection-heuristics-practical&quot;&gt;Context Selection Heuristics (Practical)&lt;/h2&gt;
+
+&lt;p&gt;You don’t need perfect theory. Start with heuristics:&lt;/p&gt;
+
+&lt;h3 id=&quot;topic-relevance-score&quot;&gt;Topic Relevance Score&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Semantic similarity to goal&lt;/li&gt;
+  &lt;li&gt;Recency of activity&lt;/li&gt;
+  &lt;li&gt;Dependency distance in graph&lt;/li&gt;
+  &lt;li&gt;Confidence level (canonical &amp;gt; speculative)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;resolution-heuristic&quot;&gt;Resolution Heuristic&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Early exploration → zoom out&lt;/li&gt;
+  &lt;li&gt;Decision time → zoom in&lt;/li&gt;
+  &lt;li&gt;Explanation → mixed (overview + detail)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;branch-policy&quot;&gt;Branch Policy&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Preserve alternatives by default&lt;/li&gt;
+  &lt;li&gt;Collapse only on explicit commit&lt;/li&gt;
+  &lt;li&gt;Keep “shadow branches” for backtracking&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;handling-drift-and-contamination&quot;&gt;Handling Drift and Contamination&lt;/h2&gt;
+
+&lt;p&gt;Linear context contaminates topics. Topic graphs isolate them.&lt;/p&gt;
+
+&lt;p&gt;Mechanisms:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Topic boundaries&lt;/strong&gt;: content belongs &lt;em&gt;somewhere&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cross-links&lt;/strong&gt;: explicit, not implicit&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Context guards&lt;/strong&gt;: prevent unrelated topics from leaking in&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Re-entry&lt;/strong&gt;: returning to a topic restores its internal context&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This mirrors how humans say:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“Let’s go back to &lt;em&gt;that&lt;/em&gt; topic.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;event-logs-as-the-substrate&quot;&gt;Event Logs as the Substrate&lt;/h2&gt;
+
+&lt;p&gt;Under the hood, everything is still an &lt;strong&gt;append-only event log&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Observations&lt;/li&gt;
+  &lt;li&gt;Decisions&lt;/li&gt;
+  &lt;li&gt;Tool calls&lt;/li&gt;
+  &lt;li&gt;Outcomes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Topic nodes &lt;em&gt;index&lt;/em&gt; into the log.
+Branches are pointers to subsets.
+Summaries are projections.&lt;/p&gt;
+
+&lt;p&gt;This keeps the system:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Auditable&lt;/li&gt;
+  &lt;li&gt;Reconstructable&lt;/li&gt;
+  &lt;li&gt;Revisable&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;putting-it-together-branching--topics--pointers&quot;&gt;Putting It Together: Branching + Topics + Pointers&lt;/h2&gt;
+
+&lt;p&gt;A scalable agent memory/context system looks like:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Event Log&lt;/strong&gt;: immutable history&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Topic Graph&lt;/strong&gt;: semantic organization&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Branches&lt;/strong&gt;: alternative paths&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Pointers&lt;/strong&gt;: context addresses&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Context Builder&lt;/strong&gt;: top-down assembler&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Context becomes &lt;strong&gt;navigation&lt;/strong&gt;, not accumulation.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-this-matches-human-cognition&quot;&gt;Why This Matches Human Cognition&lt;/h2&gt;
+
+&lt;p&gt;Humans:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Organize knowledge by topic&lt;/li&gt;
+  &lt;li&gt;Zoom in/out fluidly&lt;/li&gt;
+  &lt;li&gt;Revisit contexts intact&lt;/li&gt;
+  &lt;li&gt;Hold alternatives without collapsing them&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This architecture does the same—explicitly.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;minimal-implementation-path&quot;&gt;Minimal Implementation Path&lt;/h2&gt;
+
+&lt;p&gt;You can start small:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Topic nodes as records with IDs&lt;/li&gt;
+  &lt;li&gt;Maintain per-topic summaries (2–3 levels)&lt;/li&gt;
+  &lt;li&gt;Store events append-only&lt;/li&gt;
+  &lt;li&gt;Use pointers to assemble prompts&lt;/li&gt;
+  &lt;li&gt;Add branching when needed&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The hard part isn’t infra.
+It’s &lt;strong&gt;respecting the distinction between memory and context&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;closing-thought&quot;&gt;Closing Thought&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Logs remember everything.
+Topics organize meaning.
+Pointers decide relevance.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Agents don’t fail because they lack intelligence.
+They fail because we give them context the way machines prefer—not the way minds work.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
  <entry>
    <title>In an AI World, CRUD is Not Enough</title>
-   <link href="http://localhost:4000/in-an-ai-world-crud-is-not-enough"/>
-   <updated>2026-01-18T18:37:47-05:00</updated>
-   <id>http://localhost:4000/In an AI World, CRUD is Not Enough</id>
+   <link href="https://jffypak.com/in-an-ai-world-crud-is-not-enough"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/In an AI World, CRUD is Not Enough</id>
    <content type="html">&lt;p&gt;For the last 15 years, being a ‘good engineer’ mostly meant one thing:&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -118,6 +445,1589 @@ Queues / workflows = execution plane&lt;/p&gt;
 &lt;p&gt;Engineers who stay CRUD-only will still be useful, but I suspect a lot of these AI coding assistants will get really good at writing code for these systems. So these engineers will be increasingly confined to the edges of the systems.&lt;/p&gt;
 
 &lt;p&gt;Understanding queues, events, and workflows will shape the core. Flow mastery will define the next era of software because AI systems will force us to model reality as it actually behaves. Not atomically, but asynchronously.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
+   <title>Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems</title>
+   <link href="https://jffypak.com/memory-after-crud"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/Memory After CRUD</id>
+   <content type="html">&lt;p&gt;If the philosophical claim is that &lt;strong&gt;agents force us to rethink memory&lt;/strong&gt;, the technical reality is this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Linear logs and mutable state are no longer sufficient abstractions.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;To build agentic systems that reason, revise, and explore, we need memory structures that preserve &lt;strong&gt;history, divergence, and intent&lt;/strong&gt;—not just the latest value.&lt;/p&gt;
+
+&lt;p&gt;This essay is about what those structures actually look like.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;from-state-to-structure&quot;&gt;From “State” to “Structure”&lt;/h2&gt;
+
+&lt;p&gt;CRUD systems treat memory as &lt;strong&gt;state&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A row represents truth&lt;/li&gt;
+  &lt;li&gt;Updates overwrite the past&lt;/li&gt;
+  &lt;li&gt;History is optional or secondary&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Agentic systems need &lt;strong&gt;structure&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How did we get here?&lt;/li&gt;
+  &lt;li&gt;What alternatives existed?&lt;/li&gt;
+  &lt;li&gt;Which assumptions led to this outcome?&lt;/li&gt;
+  &lt;li&gt;What can we revisit?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;That requires memory models that encode &lt;strong&gt;relationships&lt;/strong&gt;, not just values.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-fundamental-shift-from-lists-to-graphs&quot;&gt;The Fundamental Shift: From Lists to Graphs&lt;/h2&gt;
+
+&lt;p&gt;Most conversational and task systems model memory as a &lt;strong&gt;list&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Mathematica&quot;&gt;Message 1
+Message 2
+Message 3
+Message 4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This implies:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;One past&lt;/li&gt;
+  &lt;li&gt;One present&lt;/li&gt;
+  &lt;li&gt;One future&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Human reasoning does not work this way.&lt;/p&gt;
+
+&lt;p&gt;Agentic reasoning &lt;em&gt;definitely&lt;/em&gt; does not.&lt;/p&gt;
+
+&lt;p&gt;What we need instead is a &lt;strong&gt;Directed Acyclic Graph (DAG)&lt;/strong&gt; of memory.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;memory-as-a-dag&quot;&gt;Memory as a DAG&lt;/h2&gt;
+
+&lt;p&gt;In a DAG-based memory model:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Nodes represent thoughts, messages, decisions, or states&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Edges represent “derived from” or “continued from”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Branches represent alternative paths of reasoning&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Mathematica&quot;&gt;        A
+        |
+        B
+       / \
+      C   D
+      |   |
+      E   F
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;B&lt;/code&gt; led to two possible continuations&lt;/li&gt;
+  &lt;li&gt;Both paths remain valid&lt;/li&gt;
+  &lt;li&gt;Neither is erased by choosing the other&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is &lt;strong&gt;branching memory&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-dags-matter-for-agents&quot;&gt;Why DAGs Matter for Agents&lt;/h2&gt;
+
+&lt;p&gt;DAGs give agents abilities linear memory cannot:&lt;/p&gt;
+
+&lt;h3 id=&quot;1-reversible-reasoning&quot;&gt;1. Reversible reasoning&lt;/h3&gt;
+
+&lt;p&gt;Agents can:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Backtrack&lt;/li&gt;
+  &lt;li&gt;Compare alternatives&lt;/li&gt;
+  &lt;li&gt;Re-evaluate earlier assumptions&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;2-parallel-exploration&quot;&gt;2. Parallel exploration&lt;/h3&gt;
+
+&lt;p&gt;Multiple approaches can be explored without:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Context collision&lt;/li&gt;
+  &lt;li&gt;Forced summarization&lt;/li&gt;
+  &lt;li&gt;Premature commitment&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;3-explicit-provenance&quot;&gt;3. Explicit provenance&lt;/h3&gt;
+
+&lt;p&gt;Every decision has a lineage:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“This conclusion came from &lt;em&gt;that&lt;/em&gt; chain of reasoning.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This matters for trust, debugging, and revision.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;event-logs-as-the-spine-of-memory&quot;&gt;Event Logs as the Spine of Memory&lt;/h2&gt;
+
+&lt;p&gt;Underneath most DAG-based systems is an &lt;strong&gt;event log&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Instead of storing:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“The agent believes X”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;You store:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“The agent observed A, decided B, attempted C, failed D, retried E”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This is &lt;strong&gt;append-only memory&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Event logs:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Preserve time&lt;/li&gt;
+  &lt;li&gt;Preserve order&lt;/li&gt;
+  &lt;li&gt;Preserve intent&lt;/li&gt;
+  &lt;li&gt;Avoid destructive updates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;They are the raw material from which higher-level memory is built.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;events-vs-state-why-this-is-hard-for-crud-minds&quot;&gt;Events vs State (Why This Is Hard for CRUD Minds)&lt;/h2&gt;
+
+&lt;p&gt;State answers:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“What is true?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Events answer:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“What happened?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Agentic systems need both—but &lt;strong&gt;events come first&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;State is a projection.
+Memory is the source.&lt;/p&gt;
+
+&lt;p&gt;This is why event sourcing keeps reappearing in agent systems, even when teams swear they’re not “doing event sourcing.”&lt;/p&gt;
+
+&lt;p&gt;They are. They just don’t call it that.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;pointers-the-smallest-useful-abstraction&quot;&gt;Pointers: The Smallest Useful Abstraction&lt;/h2&gt;
+
+&lt;p&gt;The real power move is not DAGs—it’s &lt;strong&gt;pointers&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Instead of “current context,” agents operate on:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;References to prior nodes&lt;/li&gt;
+  &lt;li&gt;Anchors into the graph&lt;/li&gt;
+  &lt;li&gt;Explicit selections of history&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A pointer says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“This is the past I am reasoning from.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Two agents can share the same event log and still reason differently—because they point to different nodes.&lt;/p&gt;
+
+&lt;p&gt;This is how branching conversations work without duplicating memory.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;branches-are-cheap-collapsing-is-expensive&quot;&gt;Branches Are Cheap, Collapsing Is Expensive&lt;/h2&gt;
+
+&lt;p&gt;One counterintuitive insight:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Branches are cheap. Collapsing them is what requires judgment.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Creating a new branch is trivial:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;New pointer&lt;/li&gt;
+  &lt;li&gt;New edge&lt;/li&gt;
+  &lt;li&gt;New continuation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Collapsing branches requires:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Evaluation&lt;/li&gt;
+  &lt;li&gt;Comparison&lt;/li&gt;
+  &lt;li&gt;Confidence&lt;/li&gt;
+  &lt;li&gt;Loss of alternatives&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is why summaries are dangerous when done early.&lt;/p&gt;
+
+&lt;p&gt;They collapse structure irreversibly.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;summaries-as-derived-nodes-not-replacements&quot;&gt;Summaries as Derived Nodes (Not Replacements)&lt;/h2&gt;
+
+&lt;p&gt;In a branching memory system:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Summaries are &lt;em&gt;nodes&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;Not overwrites&lt;/li&gt;
+  &lt;li&gt;Not deletions&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A summary becomes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;One interpretation&lt;/li&gt;
+  &lt;li&gt;One compression&lt;/li&gt;
+  &lt;li&gt;One branch among many&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This allows:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Revisiting raw history&lt;/li&gt;
+  &lt;li&gt;Comparing summary vs source&lt;/li&gt;
+  &lt;li&gt;Re-summarizing under new goals&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is memory as &lt;em&gt;living structure&lt;/em&gt;, not archival storage.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;branching-conversations-the-concrete-case&quot;&gt;Branching Conversations: The Concrete Case&lt;/h2&gt;
+
+&lt;p&gt;Instead of:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Conversation = Array&amp;lt;Message&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;You get:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Conversation = DAG&amp;lt;MessageNode&amp;gt;&lt;/code&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CurrentContext = Pointer&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Operations become:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Fork here&lt;/li&gt;
+  &lt;li&gt;Explore alternative&lt;/li&gt;
+  &lt;li&gt;Rejoin later&lt;/li&gt;
+  &lt;li&gt;Compare branches&lt;/li&gt;
+  &lt;li&gt;Promote branch to primary&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is not a chat feature.&lt;/p&gt;
+
+&lt;p&gt;It’s a &lt;strong&gt;memory architecture&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-agents-need-this-more-than-humans&quot;&gt;Why Agents Need This More Than Humans&lt;/h2&gt;
+
+&lt;p&gt;Humans can:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Intuitively remember alternatives&lt;/li&gt;
+  &lt;li&gt;Reconstruct lost context&lt;/li&gt;
+  &lt;li&gt;Notice inconsistencies&lt;/li&gt;
+  &lt;li&gt;Feel uncertainty&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Agents cannot.&lt;/p&gt;
+
+&lt;p&gt;If a branch is collapsed:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;It is gone&lt;/li&gt;
+  &lt;li&gt;Not “forgotten”&lt;/li&gt;
+  &lt;li&gt;Not “fuzzy”&lt;/li&gt;
+  &lt;li&gt;Deleted&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So the cost of lossy memory is far higher.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-practical-stack-conceptually&quot;&gt;The Practical Stack (Conceptually)&lt;/h2&gt;
+
+&lt;p&gt;You don’t need exotic tech.&lt;/p&gt;
+
+&lt;p&gt;Conceptually, this is enough:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Append-only event log&lt;/li&gt;
+  &lt;li&gt;DAG of memory nodes&lt;/li&gt;
+  &lt;li&gt;Pointers for active context&lt;/li&gt;
+  &lt;li&gt;Derived nodes for summaries&lt;/li&gt;
+  &lt;li&gt;Explicit branch metadata&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can build this with:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Databases&lt;/li&gt;
+  &lt;li&gt;Content-addressed storage&lt;/li&gt;
+  &lt;li&gt;IDs and references&lt;/li&gt;
+  &lt;li&gt;Simple graph traversal&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The complexity is &lt;strong&gt;conceptual&lt;/strong&gt;, not infrastructural.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-deeper-pattern&quot;&gt;The Deeper Pattern&lt;/h2&gt;
+
+&lt;p&gt;CRUD systems optimize for:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Correctness of the present&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Agentic systems optimize for:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Understanding of the past&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That requires different memory primitives.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;closing-thought&quot;&gt;Closing Thought&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Logs remember what happened.
+Graphs remember how it connects.
+Pointers decide what matters now.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Agents force us to use all three.&lt;/p&gt;
+
+&lt;p&gt;Memory is no longer just where data lives.&lt;/p&gt;
+
+&lt;p&gt;It’s how thought remains possible.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
+   <title>Money Is the New Religion (And It's a Bad One)</title>
+   <link href="https://jffypak.com/money-is-the-new-religion-and-its-a-bad-one"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/Money Is the New Religion (And Its a Bad One)</id>
+   <content type="html">&lt;p&gt;I’ve been reading Paul Kingsnorth’s &lt;em&gt;Against the Machine&lt;/em&gt;, and one idea from it has been rattling around my head for weeks. It’s the kind of idea that, once you see it, you can’t unsee it. It reframes everything — politics, tech, the general feeling that something is deeply off.&lt;/p&gt;
+
+&lt;p&gt;The idea is this: Western civilization was built around a sacred center — Christendom — and that center has collapsed. Not suddenly. Slowly, over centuries, like a building whose foundation crumbles while the walls stay standing. We kept the structures. We drained out the meaning.&lt;/p&gt;
+
+&lt;p&gt;And into that vacuum, money rushed in.&lt;/p&gt;
+
+&lt;h2 id=&quot;money-as-god&quot;&gt;Money as God&lt;/h2&gt;
+
+&lt;p&gt;This isn’t a metaphor. It’s a structural observation. Money functions as a religion in almost every way that matters.&lt;/p&gt;
+
+&lt;p&gt;It has &lt;strong&gt;universal scope&lt;/strong&gt; — a shared value system that works across every culture, every context, every border. It &lt;strong&gt;demands sacrifice&lt;/strong&gt; — your time, your health, your relationships, your planet. It &lt;strong&gt;converts everything&lt;/strong&gt; into comparable, exchangeable units. A sunset and a surgery and a semester of college all get reduced to the same denomination.&lt;/p&gt;
+
+&lt;p&gt;It &lt;strong&gt;claims neutrality while shaping outcomes&lt;/strong&gt;. Money pretends to be a simple medium of exchange, but it determines what gets valued, who holds power, and which futures become possible.&lt;/p&gt;
+
+&lt;p&gt;It &lt;strong&gt;punishes heresy&lt;/strong&gt;. Try opting out. Reject the accumulation game and watch what happens — poverty, social exclusion, loss of dignity. The system doesn’t tolerate apostates.&lt;/p&gt;
+
+&lt;p&gt;And most importantly, it &lt;strong&gt;promises salvation&lt;/strong&gt;. Security. Freedom. Dignity. These are the secular equivalents of redemption, and money is the only path to them.&lt;/p&gt;
+
+&lt;p&gt;Here’s the thing Kingsnorth helped me see: religion wasn’t just about belief. It answered a daily, practical question that most of us don’t even realize we’re asking: &lt;em&gt;What should I do today?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The sacred order used to answer that. Go to work, care for your family, observe the sabbath, serve your community, fear God. The answer had texture and weight. It connected your Tuesday morning to something eternal.&lt;/p&gt;
+
+&lt;p&gt;Now? The answer is: &lt;em&gt;Make money so you can survive and potentially thrive.&lt;/em&gt; That’s it. That’s the whole liturgy.&lt;/p&gt;
+
+&lt;h2 id=&quot;why-its-a-bad-religion&quot;&gt;Why It’s a Bad Religion&lt;/h2&gt;
+
+&lt;p&gt;The problem isn’t that money is powerful. The problem is that money cannot generate the virtues it requires to function.&lt;/p&gt;
+
+&lt;p&gt;A real sacred framework does more than organize behavior — it answers ultimate questions. What makes life meaningful? What truly deserves sacrifice? How do you bear suffering with dignity? What should not be done, even when you can do it?&lt;/p&gt;
+
+&lt;p&gt;Money has nothing to say about any of this. It optimizes. It extracts. It scales. But it cannot tell you why you’re alive or what matters when the optimization stops working.&lt;/p&gt;
+
+&lt;p&gt;Kingsnorth draws from Nietzsche here — the warning that if we lack the strength to bear the consequences of God’s death, we’ll replace divinity with something worse. And that’s exactly what happened. We didn’t become rational secularists calmly navigating an indifferent universe. We became money’s congregation, performing sacrifice and devotion without knowing what we’re worshipping or why.&lt;/p&gt;
+
+&lt;p&gt;And you can feel this everywhere. The hollowness of institutions that maintain their form while their animating purpose has died. Universities that optimize for rankings instead of wisdom. Hospitals that optimize for throughput instead of care. A neighborhood barbershop that becomes a standardized chain because the point was never the haircut — it was the community — but community doesn’t scale and money does.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-lens-that-explains-everything&quot;&gt;The Lens That Explains Everything&lt;/h2&gt;
+
+&lt;p&gt;Once I started seeing this, I couldn’t stop.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Politics:&lt;/strong&gt; The culture wars make a lot more sense as the symptoms of a civilization experiencing the death throes of its organizing principle, not as rational disagreements about policy. People aren’t really fighting about pronouns or gas stoves. They’re grieving the loss of a shared sacred story and lashing out because they don’t have language for that grief. The intensity of it all — the apocalyptic tone, the inability to communicate across divides — it looks a lot like the Tower of Babel. A civilization that pursued infinite growth and total mastery and now literally cannot speak the same language.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;World events:&lt;/strong&gt; Authoritarian leaders don’t emerge from strength. They emerge from this exact vacuum. When the old story dies and no one offers a compelling new one, nostalgia is the only product left to sell. “Make America Great Again” isn’t a policy platform. It’s a prayer — a plea to return to a sacred order that felt coherent, even if it was unjust. The reactionary movements gaining ground worldwide aren’t signs of a new order. They’re the death spasms of the old one.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Tech:&lt;/strong&gt; Silicon Valley’s AI obsession looks different through this lens too. The techno-elite aren’t just building products. They’re building a replacement god. AI has all the trappings: omniscience, judgment, salvation narratives. People already use it in prayer-shaped ways — as oracle, conscience, confessor. But AI fails as a god for the same reason money does. A genuine god must be able to say “no” in a morally meaningful way. AI cannot. It has no intrinsic values. It cannot suffer. It cannot die. It cannot love. It cannot forgive. It’s authority without embodiment — and that makes it authority without accountability.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-actually-fills-the-void&quot;&gt;What Actually Fills the Void&lt;/h2&gt;
+
+&lt;p&gt;So if money is a bad religion and AI is a bad god, what’s left?&lt;/p&gt;
+
+&lt;p&gt;Kingsnorth’s answer — and the one I keep coming back to — is that meaning requires things that don’t scale. It requires embodiment: being a physical person who can suffer and die and make irreversible choices. It requires moral risk: having skin in the game, bearing real consequences for being wrong. It requires practice and tradition: not inventing values from scratch each morning but inheriting and transmitting something across generations. And it requires humility before limits — ecological, technological, moral, human.&lt;/p&gt;
+
+&lt;p&gt;Meaning, in other words, lives in the places money empties out. It lives in the barbershop before it becomes a chain. In the craft practiced for its own sake. In the community small enough to hold you accountable. In the service done without needing credit.&lt;/p&gt;
+
+&lt;p&gt;The philosophers converge on this. Aristotle said meaning comes from excellence practiced over time within community. Kierkegaard said it begins where certainty ends — personal, risky, non-transferable. Camus said it’s dignity amid absurdity, lucid action without false certainties. They all point to the same thing: meaning emerges from finite, embodied beings who commit, risk, and humble themselves before limits they didn’t create.&lt;/p&gt;
+
+&lt;p&gt;We are not the authors of meaning. We are its caretakers.&lt;/p&gt;
+
+&lt;p&gt;I don’t think that means we need to go back to church — though for some people, maybe it does. I think it means we need to stop pretending that money, or algorithms, or any system can answer the questions that only lived human experience can answer. What is worth preserving? What deserves reverence? What should I do today — not to optimize, but to live well?&lt;/p&gt;
+
+&lt;p&gt;Those questions don’t have efficient answers. That might be the point.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
+   <title>The Control Plane and Execution Plane Split (Why AI Systems Are Forcing a New Architecture)</title>
+   <link href="https://jffypak.com/the-control-plane-and-execution-plane-split"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/The Control Plane and Execution Plane Split</id>
+   <content type="html">&lt;p&gt;Most engineering pain in AI systems today comes from a single mistake:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;We keep trying to run &lt;strong&gt;execution&lt;/strong&gt; inside systems designed for &lt;strong&gt;control&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;CRUD frameworks, web servers, and monolithic apps were never meant to &lt;em&gt;run&lt;/em&gt; work.
+They were meant to &lt;em&gt;describe&lt;/em&gt; it.&lt;/p&gt;
+
+&lt;p&gt;AI agents make that distinction impossible to ignore.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;two-planes-one-system&quot;&gt;Two Planes, One System&lt;/h2&gt;
+
+&lt;p&gt;In distributed systems, there’s an old idea that’s suddenly relevant again:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Separate the control plane from the execution plane.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;You already know this pattern — even if you’ve never named it.&lt;/p&gt;
+
+&lt;h3 id=&quot;control-plane-answers&quot;&gt;Control Plane answers:&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;What should happen?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Who is allowed to do it?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What is the current state?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What is the desired configuration?&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;execution-plane-answers&quot;&gt;Execution Plane answers:&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;How does it actually happen?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What is running right now?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What failed?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What needs to be retried?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;What’s waiting on what?&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Most traditional web apps collapse these into one.&lt;/p&gt;
+
+&lt;p&gt;AI systems cannot.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-crud-systems-collapse-under-agents&quot;&gt;Why CRUD Systems Collapse Under Agents&lt;/h2&gt;
+
+&lt;p&gt;CRUD frameworks assume:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Requests are short-lived&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;State is the source of truth&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Time is incidental&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Execution is synchronous or near-synchronous&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Agentic systems assume the opposite:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Work is long-lived&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Progress is incremental&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Failure is expected&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Time is central&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Execution happens without users watching&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Trying to force agents into CRUD systems leads to:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Status columns pretending to be workflows&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Background jobs pretending to be orchestration&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Controllers pretending to be schedulers&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Databases pretending to be message buses&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The result &lt;em&gt;works&lt;/em&gt;, but feels wrong — because it is.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-control-plane-what-crud-is-actually-good-at&quot;&gt;The Control Plane (What CRUD Is Actually Good At)&lt;/h2&gt;
+
+&lt;p&gt;CRUD systems shine when modeling &lt;strong&gt;intent and authority&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The control plane should own:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;User intent&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Configuration&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Permissions&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Policies&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Canonical state&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Final outcomes&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This includes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;“Run the agent”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;“Cancel the task”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;“Retry with new parameters”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;“This is allowed”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;“This is complete”&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Think &lt;strong&gt;stable, inspectable, durable state&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;control-plane-diagram&quot;&gt;Control Plane Diagram&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-pgsql&quot;&gt;+----------------------+
+|      Control Plane   |
+|----------------------|
+| Users                |
+| API / UI             |
+| Auth                 |
+| Permissions          |
+| Configuration        |
+| Canonical State      |
++----------------------+
+            |
+            | commands / intent
+            v
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;CRUD is &lt;em&gt;excellent&lt;/em&gt; here.&lt;/p&gt;
+
+&lt;p&gt;This is where Rails, Django, and similar frameworks still dominate.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-execution-plane-where-agents-actually-live&quot;&gt;The Execution Plane (Where Agents Actually Live)&lt;/h2&gt;
+
+&lt;p&gt;The execution plane owns &lt;strong&gt;motion&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;It deals with:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Tasks&lt;/li&gt;
+  &lt;li&gt;Messages&lt;/li&gt;
+  &lt;li&gt;Events&lt;/li&gt;
+  &lt;li&gt;Retries&lt;/li&gt;
+  &lt;li&gt;Partial progress&lt;/li&gt;
+  &lt;li&gt;Timeouts&lt;/li&gt;
+  &lt;li&gt;Backpressure&lt;/li&gt;
+  &lt;li&gt;Concurrency&lt;/li&gt;
+  &lt;li&gt;Streaming output&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Execution systems assume:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Work may fail&lt;/li&gt;
+  &lt;li&gt;Work may resume&lt;/li&gt;
+  &lt;li&gt;Work may branch&lt;/li&gt;
+  &lt;li&gt;Work may outlive any single request&lt;/li&gt;
+  &lt;li&gt;Work must be observable &lt;em&gt;while it runs&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;execution-plane-diagram&quot;&gt;Execution Plane Diagram&lt;/h3&gt;
+
+&lt;div class=&quot;language-lua highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;            &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;Execution&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Plane&lt;/span&gt;    &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Queues&lt;/span&gt;               &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Workers&lt;/span&gt;              &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Agents&lt;/span&gt;               &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Tool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Runners&lt;/span&gt;         &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Workflow&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Engine&lt;/span&gt;      &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Stream&lt;/span&gt;         &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This is where:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Agents think&lt;/li&gt;
+  &lt;li&gt;Tools execute&lt;/li&gt;
+  &lt;li&gt;Logs stream&lt;/li&gt;
+  &lt;li&gt;Progress accumulates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Trying to do this &lt;em&gt;inside&lt;/em&gt; a CRUD framework is what causes pain.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;how-the-two-planes-interact&quot;&gt;How the Two Planes Interact&lt;/h2&gt;
+
+&lt;p&gt;The planes communicate via &lt;strong&gt;commands and events&lt;/strong&gt; — not shared logic.&lt;/p&gt;
+
+&lt;h3 id=&quot;full-system-diagram&quot;&gt;Full System Diagram&lt;/h3&gt;
+
+&lt;div class=&quot;language-lua highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;Control&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Plane&lt;/span&gt;      &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;API&lt;/span&gt;             &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Auth&lt;/span&gt;                 &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;               &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;State&lt;/span&gt;                &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Run agent&quot;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;Execution&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Plane&lt;/span&gt;    &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Queue&lt;/span&gt;                &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Agent&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Coordinator&lt;/span&gt;    &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Workers&lt;/span&gt;              &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Tools&lt;/span&gt;                &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+            &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Events&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;progress&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;failure&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;Control&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Plane&lt;/span&gt;      &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Update&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;         &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Persist&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outcomes&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expose&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status&lt;/span&gt;        &lt;span class=&quot;err&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;----------------------+&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Key rule:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;The control plane never blocks on execution.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It &lt;em&gt;observes&lt;/em&gt; execution.
+It &lt;em&gt;does not host&lt;/em&gt; it.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-makes-the-split-obvious&quot;&gt;Streaming Makes the Split Obvious&lt;/h2&gt;
+
+&lt;p&gt;Streaming output (tokens, logs, diffs) exposes the lie immediately.&lt;/p&gt;
+
+&lt;p&gt;If execution lives in the control plane:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Threads get tied up&lt;/li&gt;
+  &lt;li&gt;Capacity collapses&lt;/li&gt;
+  &lt;li&gt;Latency spikes&lt;/li&gt;
+  &lt;li&gt;Backpressure becomes invisible&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If execution lives in the execution plane:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Streaming is natural&lt;/li&gt;
+  &lt;li&gt;Workers emit events&lt;/li&gt;
+  &lt;li&gt;The UI listens&lt;/li&gt;
+  &lt;li&gt;The system stays honest about time&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is why SSE + queues works so well — and SSE + Rails controllers feels brittle.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-this-pattern-keeps-reappearing&quot;&gt;Why This Pattern Keeps Reappearing&lt;/h2&gt;
+
+&lt;p&gt;You’ve seen this split before:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Kubernetes
+    &lt;ul&gt;
+      &lt;li&gt;Control plane: API server&lt;/li&gt;
+      &lt;li&gt;Execution plane: nodes, pods&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;CI systems
+    &lt;ul&gt;
+      &lt;li&gt;Control plane: pipeline definition&lt;/li&gt;
+      &lt;li&gt;Execution plane: runners&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Databases
+    &lt;ul&gt;
+      &lt;li&gt;Control plane: metadata, schema&lt;/li&gt;
+      &lt;li&gt;Execution plane: query workers&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;AI agents are just the next system to force the same realization.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-failure-mode-when-you-dont-split&quot;&gt;The Failure Mode When You Don’t Split&lt;/h2&gt;
+
+&lt;p&gt;When you don’t separate planes, you get:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Controllers doing orchestration&lt;/li&gt;
+  &lt;li&gt;Background jobs doing coordination&lt;/li&gt;
+  &lt;li&gt;Databases doing scheduling&lt;/li&gt;
+  &lt;li&gt;Redis doing locking&lt;/li&gt;
+  &lt;li&gt;Humans debugging timing bugs at 3am&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Every workaround is a symptom.&lt;/p&gt;
+
+&lt;p&gt;The architecture is asking one system to be two things at once.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-this-means-for-engineers&quot;&gt;What This Means for Engineers&lt;/h2&gt;
+
+&lt;p&gt;This split is becoming a &lt;strong&gt;career boundary&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Engineers who only know CRUD will:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Build control planes&lt;/li&gt;
+  &lt;li&gt;Work on config, auth, and state&lt;/li&gt;
+  &lt;li&gt;Stay important — but peripheral&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Engineers who understand execution systems will:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Design agent workflows&lt;/li&gt;
+  &lt;li&gt;Own reliability&lt;/li&gt;
+  &lt;li&gt;Shape AI platforms&lt;/li&gt;
+  &lt;li&gt;Decide how systems &lt;em&gt;actually behave&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Both are needed — but they are no longer the same job.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-quiet-shift&quot;&gt;The Quiet Shift&lt;/h2&gt;
+
+&lt;p&gt;The most important architectural shift of the AI era isn’t models.&lt;/p&gt;
+
+&lt;p&gt;It’s this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Execution is moving out of web frameworks.
+Control is staying behind.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Once you see the control plane / execution plane split, a lot of modern system design suddenly makes sense.&lt;/p&gt;
+
+&lt;p&gt;And once you don’t see it — everything feels painful.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
+   <title>Why Rails Feels Painful in an Agentic World</title>
+   <link href="https://jffypak.com/why-rails-feels-painful-in-an-agentic-world"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/Why Rails Feels Painful in an Agentic World</id>
+   <content type="html">&lt;p&gt;Rails didn’t get worse.
+The world just moved.&lt;/p&gt;
+
+&lt;p&gt;For over a decade, Rails was the &lt;em&gt;correct&lt;/em&gt; abstraction for most software. It optimized for the dominant shape of work on the web: short-lived requests, synchronous logic, and database-backed state.&lt;/p&gt;
+
+&lt;p&gt;But AI agents — systems that &lt;em&gt;act over time&lt;/em&gt; — expose a mismatch that’s becoming harder to ignore.&lt;/p&gt;
+
+&lt;p&gt;Rails doesn’t fail loudly in an agentic world.
+It fails &lt;em&gt;slowly&lt;/em&gt;, expensively, and with a lot of compensating code.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;rails-assumes-the-request-is-the-unit-of-work&quot;&gt;Rails Assumes the Request Is the Unit of Work&lt;/h2&gt;
+
+&lt;p&gt;At its core, Rails is built around a simple idea:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A request comes in, some logic runs, the request completes.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Everything in the framework reinforces this:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Controllers&lt;/li&gt;
+  &lt;li&gt;Middleware&lt;/li&gt;
+  &lt;li&gt;Transactions&lt;/li&gt;
+  &lt;li&gt;Callbacks&lt;/li&gt;
+  &lt;li&gt;Thread-per-request servers&lt;/li&gt;
+  &lt;li&gt;Strong assumptions about request lifetimes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Even background jobs in Rails ecosystems are treated as &lt;strong&gt;“requests, but later.”&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is fine — even elegant — when work:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Completes quickly&lt;/li&gt;
+  &lt;li&gt;Has a clear beginning and end&lt;/li&gt;
+  &lt;li&gt;Is deterministic&lt;/li&gt;
+  &lt;li&gt;Is owned by a single execution path&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Agentic systems break all four assumptions.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;agents-dont-finish--they-progress&quot;&gt;Agents Don’t Finish — They Progress&lt;/h2&gt;
+
+&lt;p&gt;An AI agent doesn’t “complete” in the Rails sense.&lt;/p&gt;
+
+&lt;p&gt;It:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Starts&lt;/li&gt;
+  &lt;li&gt;Thinks&lt;/li&gt;
+  &lt;li&gt;Calls tools&lt;/li&gt;
+  &lt;li&gt;Waits on external systems&lt;/li&gt;
+  &lt;li&gt;Produces partial output&lt;/li&gt;
+  &lt;li&gt;Fails softly&lt;/li&gt;
+  &lt;li&gt;Retries&lt;/li&gt;
+  &lt;li&gt;Gets interrupted&lt;/li&gt;
+  &lt;li&gt;Continues later&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is no single request boundary that naturally contains this.&lt;/p&gt;
+
+&lt;p&gt;So in Rails, teams fake it:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Status columns (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pending&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;running&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;failed&lt;/code&gt;)&lt;/li&gt;
+  &lt;li&gt;Background jobs chained together&lt;/li&gt;
+  &lt;li&gt;Ad-hoc retry logic&lt;/li&gt;
+  &lt;li&gt;Cron-driven polling&lt;/li&gt;
+  &lt;li&gt;Hand-rolled state machines hidden in models&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The system &lt;em&gt;works&lt;/em&gt;, but the abstractions are lying.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;long-lived-streams-are-a-structural-mismatch&quot;&gt;Long-Lived Streams Are a Structural Mismatch&lt;/h2&gt;
+
+&lt;p&gt;Agentic systems want to stream:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Tokens&lt;/li&gt;
+  &lt;li&gt;Logs&lt;/li&gt;
+  &lt;li&gt;Tool calls&lt;/li&gt;
+  &lt;li&gt;Intermediate reasoning&lt;/li&gt;
+  &lt;li&gt;Progress updates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Rails can technically stream responses (SSE, chunked responses), but at a real cost.&lt;/p&gt;
+
+&lt;p&gt;A long-lived stream:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Holds a Puma thread&lt;/li&gt;
+  &lt;li&gt;Reduces overall request capacity&lt;/li&gt;
+  &lt;li&gt;Competes with normal web traffic&lt;/li&gt;
+  &lt;li&gt;Requires careful tuning to avoid starvation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Rails was designed assuming:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Threads are freed quickly.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Agent streaming violates that assumption by design.&lt;/p&gt;
+
+&lt;p&gt;The result isn’t a single dramatic failure — it’s &lt;strong&gt;capacity pressure everywhere&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;rails-is-state-first-agents-are-flow-first&quot;&gt;Rails Is State-First; Agents Are Flow-First&lt;/h2&gt;
+
+&lt;p&gt;Rails encourages you to think in terms of:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Models&lt;/li&gt;
+  &lt;li&gt;Tables&lt;/li&gt;
+  &lt;li&gt;Associations&lt;/li&gt;
+  &lt;li&gt;Validations&lt;/li&gt;
+  &lt;li&gt;Callbacks&lt;/li&gt;
+  &lt;li&gt;Transactions&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is &lt;em&gt;state-first thinking&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Agents require &lt;em&gt;flow-first thinking&lt;/em&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;What happens next?&lt;/li&gt;
+  &lt;li&gt;What is waiting on what?&lt;/li&gt;
+  &lt;li&gt;What can be retried?&lt;/li&gt;
+  &lt;li&gt;What partially succeeded?&lt;/li&gt;
+  &lt;li&gt;What failed but can continue?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Rails has no native vocabulary for this.&lt;/p&gt;
+
+&lt;p&gt;So flow logic gets embedded:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;In controllers&lt;/li&gt;
+  &lt;li&gt;In service objects&lt;/li&gt;
+  &lt;li&gt;In background jobs&lt;/li&gt;
+  &lt;li&gt;In callbacks&lt;/li&gt;
+  &lt;li&gt;In comments and tribal knowledge&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Eventually, nobody knows what actually drives the system forward.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;concurrency-and-race-conditions-become-the-tax&quot;&gt;Concurrency and Race Conditions Become the Tax&lt;/h2&gt;
+
+&lt;p&gt;Once you simulate workflows on top of CRUD systems, concurrency becomes your constant tax.&lt;/p&gt;
+
+&lt;p&gt;You start worrying about:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Duplicate job execution&lt;/li&gt;
+  &lt;li&gt;Lost updates&lt;/li&gt;
+  &lt;li&gt;Stale reads&lt;/li&gt;
+  &lt;li&gt;Lock contention&lt;/li&gt;
+  &lt;li&gt;Idempotency&lt;/li&gt;
+  &lt;li&gt;Partial writes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Rails gives you tools — transactions, locks, retries — but not &lt;em&gt;structure&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;You’re solving distributed systems problems inside a framework that assumes you aren’t.&lt;/p&gt;
+
+&lt;p&gt;This is why teams accumulate years of engineering effort fixing:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;DB race conditions&lt;/li&gt;
+  &lt;li&gt;Redis inconsistencies&lt;/li&gt;
+  &lt;li&gt;Sidekiq retry edge cases&lt;/li&gt;
+  &lt;li&gt;“This job ran twice” bugs&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Not because Rails is bad — but because it was never meant to be an event engine.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;rails-makes-time-an-afterthought&quot;&gt;Rails Makes Time an Afterthought&lt;/h2&gt;
+
+&lt;p&gt;In agentic systems, time is central:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Delays matter&lt;/li&gt;
+  &lt;li&gt;Timeouts matter&lt;/li&gt;
+  &lt;li&gt;Waiting is normal&lt;/li&gt;
+  &lt;li&gt;Progress happens without user interaction&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In Rails, time is usually handled by:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Cron jobs&lt;/li&gt;
+  &lt;li&gt;Polling&lt;/li&gt;
+  &lt;li&gt;Scheduled workers&lt;/li&gt;
+  &lt;li&gt;Timestamps sprinkled across tables&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This works — but it obscures intent.&lt;/p&gt;
+
+&lt;p&gt;A queue or workflow system says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“This happens after that.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Rails says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“This might happen later if something checks.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That difference compounds fast.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-hidden-cost-cognitive-load&quot;&gt;The Hidden Cost: Cognitive Load&lt;/h2&gt;
+
+&lt;p&gt;Perhaps the biggest problem isn’t performance or scaling.&lt;/p&gt;
+
+&lt;p&gt;It’s &lt;strong&gt;cognitive load&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;In a Rails-based agent system:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Flow is implicit&lt;/li&gt;
+  &lt;li&gt;State transitions are scattered&lt;/li&gt;
+  &lt;li&gt;Failure paths are unclear&lt;/li&gt;
+  &lt;li&gt;Recovery logic is ad-hoc&lt;/li&gt;
+  &lt;li&gt;Observability is stitched together&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You don’t know what the system is doing without reading the code.&lt;/p&gt;
+
+&lt;p&gt;Agentic systems demand the opposite:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;You must be able to &lt;em&gt;see&lt;/em&gt; what is happening.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Rails doesn’t give you that view for free.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;this-isnt-rails-is-dead&quot;&gt;This Isn’t “Rails Is Dead”&lt;/h2&gt;
+
+&lt;p&gt;Rails still shines as:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A control plane&lt;/li&gt;
+  &lt;li&gt;A configuration system&lt;/li&gt;
+  &lt;li&gt;An auth layer&lt;/li&gt;
+  &lt;li&gt;A canonical source of truth&lt;/li&gt;
+  &lt;li&gt;A place to model stable state&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The mistake is asking it to be the execution engine for agents.&lt;/p&gt;
+
+&lt;p&gt;When Rails owns orchestration, streaming, retries, and long-running workflows, it’s being forced to impersonate a system it is not.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-emerging-shape-of-systems&quot;&gt;The Emerging Shape of Systems&lt;/h2&gt;
+
+&lt;p&gt;The pattern that’s quietly winning looks like this:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Rails:
+    &lt;ul&gt;
+      &lt;li&gt;User intent&lt;/li&gt;
+      &lt;li&gt;Configuration&lt;/li&gt;
+      &lt;li&gt;Permissions&lt;/li&gt;
+      &lt;li&gt;Durable state&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Agent systems:
+    &lt;ul&gt;
+      &lt;li&gt;Queues&lt;/li&gt;
+      &lt;li&gt;Event streams&lt;/li&gt;
+      &lt;li&gt;Workflow engines&lt;/li&gt;
+      &lt;li&gt;Long-running tasks&lt;/li&gt;
+      &lt;li&gt;Streaming output&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Rails remains important — just no longer central.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-real-lesson&quot;&gt;The Real Lesson&lt;/h2&gt;
+
+&lt;p&gt;Rails feels painful for agents because:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Agentic systems are honest about time, failure, and flow.
+Rails is optimized for pretending those things are edge cases.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;As AI systems move from “respond” to “act,” that honesty stops being optional.&lt;/p&gt;
+
+&lt;p&gt;And the frameworks we choose — and how we use them — will increasingly determine whether our systems feel elegant or exhausting.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ 
+ <entry>
+   <title>Why Streaming Breaks Traditional Web Assumptions</title>
+   <link href="https://jffypak.com/why-streaming-breaks-traditional-web-assumptions"/>
+   <updated>2026-06-25T01:02:22-04:00</updated>
+   <id>https://jffypak.com/Why Streaming Breaks Traditional Web Assumptions</id>
+   <content type="html">&lt;p&gt;Streaming doesn’t introduce new problems.
+It exposes the ones we’ve been ignoring.&lt;/p&gt;
+
+&lt;p&gt;For most of the web’s history, systems were built around a simple, comforting lie:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;A request comes in.
+Some work happens.
+A response goes out.
+The system rests.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Streaming breaks that lie — not because it’s exotic, but because it’s &lt;em&gt;honest&lt;/em&gt; about how work actually happens.&lt;/p&gt;
+
+&lt;p&gt;AI agents, real-time logs, progress updates, token streams, and live diffs don’t fit neatly inside the old mental model. And once you introduce streaming, a lot of familiar assumptions quietly collapse.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-traditional-web-assumption-work-is-atomic&quot;&gt;The Traditional Web Assumption: Work Is Atomic&lt;/h2&gt;
+
+&lt;p&gt;Classic web architectures assume that work is:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Short-lived&lt;/li&gt;
+  &lt;li&gt;Bounded&lt;/li&gt;
+  &lt;li&gt;Synchronous&lt;/li&gt;
+  &lt;li&gt;Completed before the response is sent&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Even background jobs are often treated as:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“The same request — just later.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Streaming refuses to play along.&lt;/p&gt;
+
+&lt;p&gt;The moment you stream, you admit:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The work is ongoing&lt;/li&gt;
+  &lt;li&gt;The outcome is not yet known&lt;/li&gt;
+  &lt;li&gt;Partial results are meaningful&lt;/li&gt;
+  &lt;li&gt;Time matters&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;That single admission changes everything.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-makes-time-a-first-class-concept&quot;&gt;Streaming Makes Time a First-Class Concept&lt;/h2&gt;
+
+&lt;p&gt;In traditional web apps, time is mostly invisible:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Requests are “fast” or “slow”&lt;/li&gt;
+  &lt;li&gt;Background jobs are “queued” or “done”&lt;/li&gt;
+  &lt;li&gt;Delays are hidden behind spinners&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming makes time explicit.&lt;/p&gt;
+
+&lt;p&gt;When you stream:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;You see progress&lt;/li&gt;
+  &lt;li&gt;You feel latency&lt;/li&gt;
+  &lt;li&gt;You notice pauses&lt;/li&gt;
+  &lt;li&gt;You observe stalls and retries&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is uncomfortable for systems designed to pretend time doesn’t exist.&lt;/p&gt;
+
+&lt;p&gt;CRUD frameworks are optimized to answer:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“What is the current state?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Streaming forces you to answer:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“What is happening &lt;em&gt;right now&lt;/em&gt;?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Those are different questions.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-breaks-the-request-boundary&quot;&gt;Streaming Breaks the Request Boundary&lt;/h2&gt;
+
+&lt;p&gt;The request boundary is sacred in traditional web frameworks.&lt;/p&gt;
+
+&lt;p&gt;It defines:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Resource allocation&lt;/li&gt;
+  &lt;li&gt;Concurrency&lt;/li&gt;
+  &lt;li&gt;Error handling&lt;/li&gt;
+  &lt;li&gt;Observability&lt;/li&gt;
+  &lt;li&gt;Capacity planning&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming punches a hole straight through it.&lt;/p&gt;
+
+&lt;p&gt;A streamed response:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Keeps connections open&lt;/li&gt;
+  &lt;li&gt;Ties up workers or threads&lt;/li&gt;
+  &lt;li&gt;Lives longer than typical requests&lt;/li&gt;
+  &lt;li&gt;Overlaps with other work&lt;/li&gt;
+  &lt;li&gt;Cannot be “rolled back”&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is why streaming inside request-oriented frameworks feels fragile.&lt;/p&gt;
+
+&lt;p&gt;The framework is still asking:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“When does this request finish?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Streaming answers:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“It doesn’t. It &lt;em&gt;progresses&lt;/em&gt;.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-turns-failure-from-an-exception-into-a-state&quot;&gt;Streaming Turns Failure from an Exception into a State&lt;/h2&gt;
+
+&lt;p&gt;In a non-streaming world:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Success = response returned&lt;/li&gt;
+  &lt;li&gt;Failure = exception or error code&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming breaks this binary.&lt;/p&gt;
+
+&lt;p&gt;Failures become:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Partial output&lt;/li&gt;
+  &lt;li&gt;Gaps in the stream&lt;/li&gt;
+  &lt;li&gt;Retries mid-execution&lt;/li&gt;
+  &lt;li&gt;Degraded progress&lt;/li&gt;
+  &lt;li&gt;Eventual success after visible failure&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can’t hide failure anymore — the user sees it happen.&lt;/p&gt;
+
+&lt;p&gt;This is why streaming systems require:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Idempotency&lt;/li&gt;
+  &lt;li&gt;Resume semantics&lt;/li&gt;
+  &lt;li&gt;Explicit state transitions&lt;/li&gt;
+  &lt;li&gt;Clear ownership of retries&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Traditional web stacks were not designed for this level of honesty.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-exposes-backpressure&quot;&gt;Streaming Exposes Backpressure&lt;/h2&gt;
+
+&lt;p&gt;Backpressure is always there.
+Streaming just makes it visible.&lt;/p&gt;
+
+&lt;p&gt;When you stream:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Slow consumers slow producers&lt;/li&gt;
+  &lt;li&gt;Overloaded systems stall&lt;/li&gt;
+  &lt;li&gt;Congestion propagates outward&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In request/response systems, backpressure is masked:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Requests time out&lt;/li&gt;
+  &lt;li&gt;Queues silently grow&lt;/li&gt;
+  &lt;li&gt;Systems fall over abruptly&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming forces you to confront:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How many streams can we handle?&lt;/li&gt;
+  &lt;li&gt;What happens when clients are slow?&lt;/li&gt;
+  &lt;li&gt;Who owns flow control?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These questions don’t go away if you ignore them.
+Streaming just stops letting you.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-collapses-the-illusion-of-statelessness&quot;&gt;Streaming Collapses the Illusion of “Statelessness”&lt;/h2&gt;
+
+&lt;p&gt;Statelessness works when:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Requests are independent&lt;/li&gt;
+  &lt;li&gt;Responses are final&lt;/li&gt;
+  &lt;li&gt;Context is short-lived&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming is inherently stateful:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There is a “before” and “after”&lt;/li&gt;
+  &lt;li&gt;Progress accumulates&lt;/li&gt;
+  &lt;li&gt;Order matters&lt;/li&gt;
+  &lt;li&gt;Interruptions matter&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once you stream, you’re already managing state — whether you admit it or not.&lt;/p&gt;
+
+&lt;p&gt;The difference is whether that state is:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Explicit and observable
+  or&lt;/li&gt;
+  &lt;li&gt;Implicit and scattered across threads, jobs, and retries&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming punishes the second approach.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-streaming-feels-so-painful-in-traditional-web-frameworks&quot;&gt;Why Streaming Feels So Painful in Traditional Web Frameworks&lt;/h2&gt;
+
+&lt;p&gt;Frameworks like Rails, Django, and Express aren’t broken.&lt;/p&gt;
+
+&lt;p&gt;They’re optimized for a world where:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Work finishes quickly&lt;/li&gt;
+  &lt;li&gt;Responses are discrete&lt;/li&gt;
+  &lt;li&gt;Time is abstracted away&lt;/li&gt;
+  &lt;li&gt;Failure is rare&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming violates all of that.&lt;/p&gt;
+
+&lt;p&gt;So you see symptoms:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Thread exhaustion&lt;/li&gt;
+  &lt;li&gt;Worker starvation&lt;/li&gt;
+  &lt;li&gt;Awkward async hacks&lt;/li&gt;
+  &lt;li&gt;Ad-hoc buffering&lt;/li&gt;
+  &lt;li&gt;“Just one more queue”&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The pain isn’t accidental.
+It’s diagnostic.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;streaming-reveals-the-need-for-an-execution-plane&quot;&gt;Streaming Reveals the Need for an Execution Plane&lt;/h2&gt;
+
+&lt;p&gt;This is where the Control Plane / Execution Plane split becomes unavoidable.&lt;/p&gt;
+
+&lt;p&gt;Streaming belongs to the &lt;strong&gt;execution plane&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Where work runs&lt;/li&gt;
+  &lt;li&gt;Where progress happens&lt;/li&gt;
+  &lt;li&gt;Where time is real&lt;/li&gt;
+  &lt;li&gt;Where failure is expected&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Trying to host streaming in the control plane leads to:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Capacity collapse&lt;/li&gt;
+  &lt;li&gt;Complexity explosions&lt;/li&gt;
+  &lt;li&gt;Hidden coupling&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once execution is separate, streaming stops being scary.&lt;/p&gt;
+
+&lt;p&gt;It becomes just another event source.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-ai-made-this-impossible-to-ignore&quot;&gt;Why AI Made This Impossible to Ignore&lt;/h2&gt;
+
+&lt;p&gt;We’ve had streaming before:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Chat&lt;/li&gt;
+  &lt;li&gt;Notifications&lt;/li&gt;
+  &lt;li&gt;Logs&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;AI made it unavoidable because:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Token streaming is the &lt;em&gt;default&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;Long-running tasks are normal&lt;/li&gt;
+  &lt;li&gt;Partial output is valuable&lt;/li&gt;
+  &lt;li&gt;Users expect visibility, not spinners&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;AI didn’t invent streaming.&lt;/p&gt;
+
+&lt;p&gt;It just removed our ability to pretend we didn’t need it.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-deeper-truth&quot;&gt;The Deeper Truth&lt;/h2&gt;
+
+&lt;p&gt;Streaming doesn’t break systems.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Streaming reveals whether your system was telling the truth about how it works.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If your architecture assumes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Instant completion&lt;/li&gt;
+  &lt;li&gt;Atomic success&lt;/li&gt;
+  &lt;li&gt;Invisible time&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming will hurt.&lt;/p&gt;
+
+&lt;p&gt;If your architecture already models:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Flow&lt;/li&gt;
+  &lt;li&gt;Progress&lt;/li&gt;
+  &lt;li&gt;Failure&lt;/li&gt;
+  &lt;li&gt;Time&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming feels natural.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-takeaway&quot;&gt;The Takeaway&lt;/h2&gt;
+
+&lt;p&gt;The future web isn’t “real-time” because it’s trendy.&lt;/p&gt;
+
+&lt;p&gt;It’s real-time because:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Systems act autonomously&lt;/li&gt;
+  &lt;li&gt;Work unfolds over time&lt;/li&gt;
+  &lt;li&gt;Users want to see what’s happening&lt;/li&gt;
+  &lt;li&gt;And pretending otherwise no longer works&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Streaming is not a feature.&lt;/p&gt;
+
+&lt;p&gt;It’s a forcing function.&lt;/p&gt;
 </content>
  </entry>
  

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <title>Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems &mdash; Jeff Park</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="I'm Jeff Park. Welcome to my website.">
+  
+  <meta property="article:published_time" content="2026-06-25T01:02:22-04:00" />
+  <meta property="article:author"  content="https://jffypak.com/" />
+  
+
+  <link rel="canonical" href="https://jffypak.com/memory-after-crud" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:site"        content="@" />
+  <meta name="twitter:creator"     content="@" />
+  <meta name="twitter:title"       content="Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems" />
+  <meta name="twitter:description" content="I'm Jeff Park. Welcome to my website.">
+  <meta name="twitter:image"       content="https://jffypak.com/assets/cover.png" />
+
+  <meta property="og:site_name"    content="Jeff Park">
+  <meta property="og:url"          content="https://jffypak.com/memory-after-crud" />
+  <meta property="og:title"        content="Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems" />
+  <meta property="og:description"  content="I'm Jeff Park. Welcome to my website.">
+  <meta property="og:type"         content="article">
+  <meta property="og:image"        content="https://jffypak.com/assets/cover.png" />
+
+  <script defer data-domain="jffypak.com" src="https://plausible.io/js/script.outbound-links.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+</head>
+  <body>
+    <script>
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.querySelector('body').classList.add('theme-dark')
+      }
+    </script>
+
+    <nav><div class="header flex align-center">
+    <span class="flex-grow">
+       <a class="internal-link plain" href="/">Jeff Park</a>
+    </span>
+    <span class="flex-shrink ssr">
+      <a href="/about" class="muted plain">About</a>
+    </span>
+    <span id="theme-toggle" title="Toggle dark mode">
+        <div class="theme-toggle-slide"></div>
+        <div class="theme-toggle-switch"></div>
+    </span>
+</div></nav>
+
+    <div class="wrapper">
+      <main><article>
+  <div>
+    <h1>Memory After CRUD: Pointers, DAGs, and Branching in Agentic Systems</h1>
+    <table class="sst" style="max-width:20em">
+      <tr>
+        <td class="muted">Date</td>
+        <td>2026-06-25</td>
+      </tr>
+      
+      <tr>
+        <td class="muted">Tags</td>
+        <td class="tags">
+        
+            <a href="/tag/coding/" class="tag">#coding</a>
+        
+            <a href="/tag/ai-agents/" class="tag">#ai-agents</a>
+        
+        </td>
+      </tr>
+      
+    </table>
+    <content>
+      <p>If the philosophical claim is that <strong>agents force us to rethink memory</strong>, the technical reality is this:</p>
+
+<blockquote>
+  <p>Linear logs and mutable state are no longer sufficient abstractions.</p>
+</blockquote>
+
+<p>To build agentic systems that reason, revise, and explore, we need memory structures that preserve <strong>history, divergence, and intent</strong>—not just the latest value.</p>
+
+<p>This essay is about what those structures actually look like.</p>
+
+<hr />
+
+<h2 id="from-state-to-structure">From “State” to “Structure”</h2>
+
+<p>CRUD systems treat memory as <strong>state</strong>:</p>
+
+<ul>
+  <li>A row represents truth</li>
+  <li>Updates overwrite the past</li>
+  <li>History is optional or secondary</li>
+</ul>
+
+<p>Agentic systems need <strong>structure</strong>:</p>
+
+<ul>
+  <li>How did we get here?</li>
+  <li>What alternatives existed?</li>
+  <li>Which assumptions led to this outcome?</li>
+  <li>What can we revisit?</li>
+</ul>
+
+<p>That requires memory models that encode <strong>relationships</strong>, not just values.</p>
+
+<hr />
+
+<h2 id="the-fundamental-shift-from-lists-to-graphs">The Fundamental Shift: From Lists to Graphs</h2>
+
+<p>Most conversational and task systems model memory as a <strong>list</strong>:</p>
+
+<pre><code class="language-Mathematica">Message 1
+Message 2
+Message 3
+Message 4
+</code></pre>
+
+<p>This implies:</p>
+
+<ul>
+  <li>One past</li>
+  <li>One present</li>
+  <li>One future</li>
+</ul>
+
+<p>Human reasoning does not work this way.</p>
+
+<p>Agentic reasoning <em>definitely</em> does not.</p>
+
+<p>What we need instead is a <strong>Directed Acyclic Graph (DAG)</strong> of memory.</p>
+
+<hr />
+
+<h2 id="memory-as-a-dag">Memory as a DAG</h2>
+
+<p>In a DAG-based memory model:</p>
+
+<ul>
+  <li>
+    <p>Nodes represent thoughts, messages, decisions, or states</p>
+  </li>
+  <li>
+    <p>Edges represent “derived from” or “continued from”</p>
+  </li>
+  <li>
+    <p>Branches represent alternative paths of reasoning</p>
+  </li>
+</ul>
+
+<p>Example:</p>
+
+<pre><code class="language-Mathematica">        A
+        |
+        B
+       / \
+      C   D
+      |   |
+      E   F
+</code></pre>
+
+<p>Here:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">B</code> led to two possible continuations</li>
+  <li>Both paths remain valid</li>
+  <li>Neither is erased by choosing the other</li>
+</ul>
+
+<p>This is <strong>branching memory</strong>.</p>
+
+<hr />
+
+<h2 id="why-dags-matter-for-agents">Why DAGs Matter for Agents</h2>
+
+<p>DAGs give agents abilities linear memory cannot:</p>
+
+<h3 id="1-reversible-reasoning">1. Reversible reasoning</h3>
+
+<p>Agents can:</p>
+
+<ul>
+  <li>Backtrack</li>
+  <li>Compare alternatives</li>
+  <li>Re-evaluate earlier assumptions</li>
+</ul>
+
+<h3 id="2-parallel-exploration">2. Parallel exploration</h3>
+
+<p>Multiple approaches can be explored without:</p>
+
+<ul>
+  <li>Context collision</li>
+  <li>Forced summarization</li>
+  <li>Premature commitment</li>
+</ul>
+
+<h3 id="3-explicit-provenance">3. Explicit provenance</h3>
+
+<p>Every decision has a lineage:</p>
+
+<blockquote>
+  <p>“This conclusion came from <em>that</em> chain of reasoning.”</p>
+</blockquote>
+
+<p>This matters for trust, debugging, and revision.</p>
+
+<hr />
+
+<h2 id="event-logs-as-the-spine-of-memory">Event Logs as the Spine of Memory</h2>
+
+<p>Underneath most DAG-based systems is an <strong>event log</strong>.</p>
+
+<p>Instead of storing:</p>
+
+<blockquote>
+  <p>“The agent believes X”</p>
+</blockquote>
+
+<p>You store:</p>
+
+<blockquote>
+  <p>“The agent observed A, decided B, attempted C, failed D, retried E”</p>
+</blockquote>
+
+<p>This is <strong>append-only memory</strong>.</p>
+
+<p>Event logs:</p>
+
+<ul>
+  <li>Preserve time</li>
+  <li>Preserve order</li>
+  <li>Preserve intent</li>
+  <li>Avoid destructive updates</li>
+</ul>
+
+<p>They are the raw material from which higher-level memory is built.</p>
+
+<hr />
+
+<h2 id="events-vs-state-why-this-is-hard-for-crud-minds">Events vs State (Why This Is Hard for CRUD Minds)</h2>
+
+<p>State answers:</p>
+
+<blockquote>
+  <p>“What is true?”</p>
+</blockquote>
+
+<p>Events answer:</p>
+
+<blockquote>
+  <p>“What happened?”</p>
+</blockquote>
+
+<p>Agentic systems need both—but <strong>events come first</strong>.</p>
+
+<p>State is a projection.
+Memory is the source.</p>
+
+<p>This is why event sourcing keeps reappearing in agent systems, even when teams swear they’re not “doing event sourcing.”</p>
+
+<p>They are. They just don’t call it that.</p>
+
+<hr />
+
+<h2 id="pointers-the-smallest-useful-abstraction">Pointers: The Smallest Useful Abstraction</h2>
+
+<p>The real power move is not DAGs—it’s <strong>pointers</strong>.</p>
+
+<p>Instead of “current context,” agents operate on:</p>
+
+<ul>
+  <li>References to prior nodes</li>
+  <li>Anchors into the graph</li>
+  <li>Explicit selections of history</li>
+</ul>
+
+<p>A pointer says:</p>
+
+<blockquote>
+  <p>“This is the past I am reasoning from.”</p>
+</blockquote>
+
+<p>Two agents can share the same event log and still reason differently—because they point to different nodes.</p>
+
+<p>This is how branching conversations work without duplicating memory.</p>
+
+<hr />
+
+<h2 id="branches-are-cheap-collapsing-is-expensive">Branches Are Cheap, Collapsing Is Expensive</h2>
+
+<p>One counterintuitive insight:</p>
+
+<blockquote>
+  <p><strong>Branches are cheap. Collapsing them is what requires judgment.</strong></p>
+</blockquote>
+
+<p>Creating a new branch is trivial:</p>
+
+<ul>
+  <li>New pointer</li>
+  <li>New edge</li>
+  <li>New continuation</li>
+</ul>
+
+<p>Collapsing branches requires:</p>
+
+<ul>
+  <li>Evaluation</li>
+  <li>Comparison</li>
+  <li>Confidence</li>
+  <li>Loss of alternatives</li>
+</ul>
+
+<p>This is why summaries are dangerous when done early.</p>
+
+<p>They collapse structure irreversibly.</p>
+
+<hr />
+
+<h2 id="summaries-as-derived-nodes-not-replacements">Summaries as Derived Nodes (Not Replacements)</h2>
+
+<p>In a branching memory system:</p>
+
+<ul>
+  <li>Summaries are <em>nodes</em></li>
+  <li>Not overwrites</li>
+  <li>Not deletions</li>
+</ul>
+
+<p>A summary becomes:</p>
+
+<ul>
+  <li>One interpretation</li>
+  <li>One compression</li>
+  <li>One branch among many</li>
+</ul>
+
+<p>This allows:</p>
+
+<ul>
+  <li>Revisiting raw history</li>
+  <li>Comparing summary vs source</li>
+  <li>Re-summarizing under new goals</li>
+</ul>
+
+<p>This is memory as <em>living structure</em>, not archival storage.</p>
+
+<hr />
+
+<h2 id="branching-conversations-the-concrete-case">Branching Conversations: The Concrete Case</h2>
+
+<p>Instead of:</p>
+
+<p><code class="language-plaintext highlighter-rouge">Conversation = Array&lt;Message&gt;</code></p>
+
+<p>You get:</p>
+
+<p><code class="language-plaintext highlighter-rouge">Conversation = DAG&lt;MessageNode&gt;</code>
+<code class="language-plaintext highlighter-rouge">CurrentContext = Pointer</code></p>
+
+<p>Operations become:</p>
+
+<ul>
+  <li>Fork here</li>
+  <li>Explore alternative</li>
+  <li>Rejoin later</li>
+  <li>Compare branches</li>
+  <li>Promote branch to primary</li>
+</ul>
+
+<p>This is not a chat feature.</p>
+
+<p>It’s a <strong>memory architecture</strong>.</p>
+
+<hr />
+
+<h2 id="why-agents-need-this-more-than-humans">Why Agents Need This More Than Humans</h2>
+
+<p>Humans can:</p>
+
+<ul>
+  <li>Intuitively remember alternatives</li>
+  <li>Reconstruct lost context</li>
+  <li>Notice inconsistencies</li>
+  <li>Feel uncertainty</li>
+</ul>
+
+<p>Agents cannot.</p>
+
+<p>If a branch is collapsed:</p>
+
+<ul>
+  <li>It is gone</li>
+  <li>Not “forgotten”</li>
+  <li>Not “fuzzy”</li>
+  <li>Deleted</li>
+</ul>
+
+<p>So the cost of lossy memory is far higher.</p>
+
+<hr />
+
+<h2 id="the-practical-stack-conceptually">The Practical Stack (Conceptually)</h2>
+
+<p>You don’t need exotic tech.</p>
+
+<p>Conceptually, this is enough:</p>
+
+<ul>
+  <li>Append-only event log</li>
+  <li>DAG of memory nodes</li>
+  <li>Pointers for active context</li>
+  <li>Derived nodes for summaries</li>
+  <li>Explicit branch metadata</li>
+</ul>
+
+<p>You can build this with:</p>
+
+<ul>
+  <li>Databases</li>
+  <li>Content-addressed storage</li>
+  <li>IDs and references</li>
+  <li>Simple graph traversal</li>
+</ul>
+
+<p>The complexity is <strong>conceptual</strong>, not infrastructural.</p>
+
+<hr />
+
+<h2 id="the-deeper-pattern">The Deeper Pattern</h2>
+
+<p>CRUD systems optimize for:</p>
+
+<blockquote>
+  <p>Correctness of the present</p>
+</blockquote>
+
+<p>Agentic systems optimize for:</p>
+
+<blockquote>
+  <p>Understanding of the past</p>
+</blockquote>
+
+<p>That requires different memory primitives.</p>
+
+<hr />
+
+<h2 id="closing-thought">Closing Thought</h2>
+
+<blockquote>
+  <p><strong>Logs remember what happened.
+Graphs remember how it connects.
+Pointers decide what matters now.</strong></p>
+</blockquote>
+
+<p>Agents force us to use all three.</p>
+
+<p>Memory is no longer just where data lives.</p>
+
+<p>It’s how thought remains possible.</p>
+
+    </content>
+  </div>
+</article>
+</main>
+      <footer><div class="wrap faint" style="display: flex; align-items: center;">
+  <a href="https://jffypak.com" class="plain ssr">
+    <img
+      src="/assets/logo.png"
+      alt="Jeff Park"
+      width="40"
+      height="40"
+      style="border-radius:50%; background:#FFE1C5"
+    />
+    </a>
+  <a href="https://github.com/jffypak" class="muted ssr" target="_blank">GitHub</a>
+  <a href="https://www.instagram.com/_tribecalledjeff/" class="muted" target="_blank">Instagram</a>
+</div></footer>
+    </div>
+
+    <script>
+    var darkMode = document.querySelector("#theme-toggle");
+
+    darkMode.addEventListener("click", function () {
+      document.body.classList.toggle("theme-dark");
+
+      let theme = "light";
+      if (document.body.classList.contains("theme-dark")) {
+        theme = "dark";
+      }
+      localStorage.setItem("theme", theme);
+    });
+    </script>
+
+    
+  </body>
+</html>

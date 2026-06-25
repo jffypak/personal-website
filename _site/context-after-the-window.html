@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <title>Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection &mdash; Jeff Park</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="I'm Jeff Park. Welcome to my website.">
+  
+  <meta property="article:published_time" content="2026-06-25T01:02:22-04:00" />
+  <meta property="article:author"  content="https://jffypak.com/" />
+  
+
+  <link rel="canonical" href="https://jffypak.com/context-after-the-window" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:site"        content="@" />
+  <meta name="twitter:creator"     content="@" />
+  <meta name="twitter:title"       content="Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection" />
+  <meta name="twitter:description" content="I'm Jeff Park. Welcome to my website.">
+  <meta name="twitter:image"       content="https://jffypak.com/assets/cover.png" />
+
+  <meta property="og:site_name"    content="Jeff Park">
+  <meta property="og:url"          content="https://jffypak.com/context-after-the-window" />
+  <meta property="og:title"        content="Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection" />
+  <meta property="og:description"  content="I'm Jeff Park. Welcome to my website.">
+  <meta property="og:type"         content="article">
+  <meta property="og:image"        content="https://jffypak.com/assets/cover.png" />
+
+  <script defer data-domain="jffypak.com" src="https://plausible.io/js/script.outbound-links.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+</head>
+  <body>
+    <script>
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.querySelector('body').classList.add('theme-dark')
+      }
+    </script>
+
+    <nav><div class="header flex align-center">
+    <span class="flex-grow">
+       <a class="internal-link plain" href="/">Jeff Park</a>
+    </span>
+    <span class="flex-shrink ssr">
+      <a href="/about" class="muted plain">About</a>
+    </span>
+    <span id="theme-toggle" title="Toggle dark mode">
+        <div class="theme-toggle-slide"></div>
+        <div class="theme-toggle-switch"></div>
+    </span>
+</div></nav>
+
+    <div class="wrapper">
+      <main><article>
+  <div>
+    <h1>Context After the Window: Topic Graphs, Semantic Pointers, and Context Selection</h1>
+    <table class="sst" style="max-width:20em">
+      <tr>
+        <td class="muted">Date</td>
+        <td>2026-06-25</td>
+      </tr>
+      
+      <tr>
+        <td class="muted">Tags</td>
+        <td class="tags">
+        
+            <a href="/tag/coding/" class="tag">#coding</a>
+        
+            <a href="/tag/ai-agents/" class="tag">#ai-agents</a>
+        
+        </td>
+      </tr>
+      
+    </table>
+    <content>
+      <p>If memory answers <strong>what is preserved</strong>, context answers <strong>what is activated</strong>.</p>
+
+<p>Most agent systems today conflate the two by treating context as a sliding window over history. That approach scales tokens, not cognition. To scale agents, we need context to become <strong>structured, addressable, and selectable</strong>—much closer to how humans think.</p>
+
+<p>This essay lays out the technical primitives that make that possible.</p>
+
+<hr />
+
+<h2 id="the-problem-with-bottom-up-context">The Problem with Bottom-Up Context</h2>
+
+<p><strong>Bottom-up context</strong> looks like this:</p>
+
+<div class="language-lua highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">context</span> <span class="o">=</span> <span class="n">concat</span><span class="p">(</span><span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="o">..</span><span class="n">n</span><span class="p">])</span>
+<span class="k">if</span> <span class="n">too</span> <span class="n">large</span><span class="p">:</span>
+  <span class="n">summarize</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This assumes:</p>
+
+<ul>
+  <li>Chronology ≈ relevance</li>
+  <li>Summaries preserve intent</li>
+  <li>One linear past is enough</li>
+</ul>
+
+<p>At scale, it fails because relevance is <strong>situational</strong>, not temporal.</p>
+
+<p>Agents need <strong>top-down context</strong>:</p>
+
+<blockquote>
+  <p>Start from a goal → select topics → choose granularity → pull details.</p>
+</blockquote>
+
+<p>That requires new data structures.</p>
+
+<hr />
+
+<h2 id="core-primitive-1-topic-graphs-not-logs">Core Primitive #1: Topic Graphs (Not Logs)</h2>
+
+<p>Replace “conversation = list” with <strong>conversation = graph of topics</strong>.</p>
+
+<h3 id="topic-graph">Topic Graph</h3>
+
+<ul>
+  <li><strong>Nodes</strong>: topics (e.g., <em>Streaming</em>, <em>Rails</em>, <em>Memory</em>, <em>Branching</em>)</li>
+  <li><strong>Edges</strong>: relationships (depends_on, refines, contrasts_with)</li>
+  <li><strong>Metadata</strong>: scope, granularity, freshness, confidence</li>
+</ul>
+
+<div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span><span class="nt">Architecture</span><span class="o">]</span>
+   <span class="err">├─</span> <span class="o">[</span><span class="nt">Control</span> <span class="nt">vs</span> <span class="nt">Execution</span><span class="o">]</span>
+   <span class="err">│</span>     <span class="err">├─</span> <span class="o">[</span><span class="nt">Streaming</span><span class="o">]</span>
+   <span class="err">│</span>     <span class="err">└─</span> <span class="o">[</span><span class="nt">Queues</span><span class="o">]</span>
+   <span class="err">└─</span> <span class="o">[</span><span class="nt">Memory</span><span class="o">]</span>
+         <span class="err">├─</span> <span class="o">[</span><span class="nt">Branching</span><span class="o">]</span>
+         <span class="err">└─</span> <span class="o">[</span><span class="nt">Summaries</span><span class="o">]</span>
+</code></pre></div></div>
+
+<p>Each topic node owns:</p>
+
+<ul>
+  <li>Its own internal history (events, notes, artifacts)</li>
+  <li>Its own summaries at multiple resolutions</li>
+  <li>Pointers to relevant branches</li>
+</ul>
+
+<p><strong>Key insight:</strong> Topics are the unit of <em>meaningful context</em>, not messages.</p>
+
+<hr />
+
+<h2 id="core-primitive-2-semantic-pointers-addressing-relevance">Core Primitive #2: Semantic Pointers (Addressing Relevance)</h2>
+
+<p>A <strong>semantic pointer</strong> is a reference to <em>where</em> and <em>how</em> to read from the topic graph.</p>
+
+<p>A pointer specifies:</p>
+
+<ul>
+  <li><strong>Topic(s)</strong>: which nodes matter</li>
+  <li><strong>Resolution</strong>: zoom level (overview → detail)</li>
+  <li><strong>Branch</strong>: which alternative path</li>
+  <li><strong>Temporal slice</strong>: entire history vs recent vs milestone</li>
+  <li><strong>Confidence</strong> (optional): provisional vs canonical</li>
+</ul>
+
+<p>Example pointer:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"topics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Memory/Branching"</span><span class="p">],</span><span class="w">
+  </span><span class="nl">"resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mid"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"branch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alternative-B"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"milestones"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>This says:</p>
+
+<blockquote>
+  <p>“Load the branching-memory topic, mid-level detail, from branch B, focusing on key moments.”</p>
+</blockquote>
+
+<p>Pointers decouple <strong>storage</strong> from <strong>activation</strong>.</p>
+
+<hr />
+
+<h2 id="core-primitive-3-multi-resolution-summaries-zoom-levels">Core Primitive #3: Multi-Resolution Summaries (Zoom Levels)</h2>
+
+<p>Summaries shouldn’t overwrite; they should <strong>stack</strong>.</p>
+
+<p>For each topic, maintain summaries at multiple resolutions:</p>
+
+<ul>
+  <li><strong>L0 (Index)</strong>: 1–2 sentences, purpose &amp; scope</li>
+  <li><strong>L1 (Overview)</strong>: paragraph-level, key claims</li>
+  <li><strong>L2 (Working)</strong>: bullets, tradeoffs, open questions</li>
+  <li><strong>L3 (Raw)</strong>: events, messages, artifacts</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">Topic</span><span class="pi">:</span> <span class="s">Streaming</span>
+  <span class="s">L0</span><span class="err">:</span> <span class="s2">"</span><span class="s">Streaming</span><span class="nv"> </span><span class="s">exposes</span><span class="nv"> </span><span class="s">time</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">progress."</span>
+  <span class="na">L1</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Why</span><span class="nv"> </span><span class="s">streaming</span><span class="nv"> </span><span class="s">breaks</span><span class="nv"> </span><span class="s">request</span><span class="nv"> </span><span class="s">boundaries..."</span>
+  <span class="na">L2</span><span class="pi">:</span> <span class="s">bullets, examples, failure modes</span>
+  <span class="na">L3</span><span class="pi">:</span> <span class="s">raw logs, diffs, messages</span>
+</code></pre></div></div>
+
+<p><strong>Rule:</strong> summaries are <em>derived nodes</em>, never destructive replacements.</p>
+
+<hr />
+
+<h2 id="core-primitive-4-context-assembly-top-down">Core Primitive #4: Context Assembly (Top-Down)</h2>
+
+<p>Context is assembled <strong>on demand</strong>.</p>
+
+<h3 id="inputs">Inputs</h3>
+
+<ul>
+  <li>Current goal / question</li>
+  <li>Active topic(s)</li>
+  <li>Desired depth</li>
+  <li>Token budget</li>
+</ul>
+
+<h3 id="algorithm-conceptual">Algorithm (Conceptual)</h3>
+
+<ol>
+  <li><strong>Goal → Topic Selection</strong>
+    <ul>
+      <li>Classify goal into topics (embedding + graph proximity)</li>
+    </ul>
+  </li>
+  <li><strong>Topic → Resolution Choice</strong>
+    <ul>
+      <li>Decide zoom (overview vs detail)</li>
+    </ul>
+  </li>
+  <li><strong>Branch Selection</strong>
+    <ul>
+      <li>Choose branch(es) consistent with goal</li>
+    </ul>
+  </li>
+  <li><strong>Budget Allocation</strong>
+    <ul>
+      <li>Allocate tokens per topic by importance</li>
+    </ul>
+  </li>
+  <li><strong>Assembly</strong>
+    <ul>
+      <li>Pull summaries/artifacts via pointers</li>
+    </ul>
+  </li>
+  <li><strong>Validation</strong>
+    <ul>
+      <li>Ensure coherence; add glue if needed</li>
+    </ul>
+  </li>
+</ol>
+
+<p>This is <strong>planning</strong>, not concatenation.</p>
+
+<hr />
+
+<h2 id="context-selection-heuristics-practical">Context Selection Heuristics (Practical)</h2>
+
+<p>You don’t need perfect theory. Start with heuristics:</p>
+
+<h3 id="topic-relevance-score">Topic Relevance Score</h3>
+
+<ul>
+  <li>Semantic similarity to goal</li>
+  <li>Recency of activity</li>
+  <li>Dependency distance in graph</li>
+  <li>Confidence level (canonical &gt; speculative)</li>
+</ul>
+
+<h3 id="resolution-heuristic">Resolution Heuristic</h3>
+
+<ul>
+  <li>Early exploration → zoom out</li>
+  <li>Decision time → zoom in</li>
+  <li>Explanation → mixed (overview + detail)</li>
+</ul>
+
+<h3 id="branch-policy">Branch Policy</h3>
+
+<ul>
+  <li>Preserve alternatives by default</li>
+  <li>Collapse only on explicit commit</li>
+  <li>Keep “shadow branches” for backtracking</li>
+</ul>
+
+<hr />
+
+<h2 id="handling-drift-and-contamination">Handling Drift and Contamination</h2>
+
+<p>Linear context contaminates topics. Topic graphs isolate them.</p>
+
+<p>Mechanisms:</p>
+
+<ul>
+  <li><strong>Topic boundaries</strong>: content belongs <em>somewhere</em></li>
+  <li><strong>Cross-links</strong>: explicit, not implicit</li>
+  <li><strong>Context guards</strong>: prevent unrelated topics from leaking in</li>
+  <li><strong>Re-entry</strong>: returning to a topic restores its internal context</li>
+</ul>
+
+<p>This mirrors how humans say:</p>
+
+<blockquote>
+  <p>“Let’s go back to <em>that</em> topic.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="event-logs-as-the-substrate">Event Logs as the Substrate</h2>
+
+<p>Under the hood, everything is still an <strong>append-only event log</strong>:</p>
+
+<ul>
+  <li>Observations</li>
+  <li>Decisions</li>
+  <li>Tool calls</li>
+  <li>Outcomes</li>
+</ul>
+
+<p>Topic nodes <em>index</em> into the log.
+Branches are pointers to subsets.
+Summaries are projections.</p>
+
+<p>This keeps the system:</p>
+
+<ul>
+  <li>Auditable</li>
+  <li>Reconstructable</li>
+  <li>Revisable</li>
+</ul>
+
+<hr />
+
+<h2 id="putting-it-together-branching--topics--pointers">Putting It Together: Branching + Topics + Pointers</h2>
+
+<p>A scalable agent memory/context system looks like:</p>
+
+<ul>
+  <li><strong>Event Log</strong>: immutable history</li>
+  <li><strong>Topic Graph</strong>: semantic organization</li>
+  <li><strong>Branches</strong>: alternative paths</li>
+  <li><strong>Pointers</strong>: context addresses</li>
+  <li><strong>Context Builder</strong>: top-down assembler</li>
+</ul>
+
+<p>Context becomes <strong>navigation</strong>, not accumulation.</p>
+
+<hr />
+
+<h2 id="why-this-matches-human-cognition">Why This Matches Human Cognition</h2>
+
+<p>Humans:</p>
+
+<ul>
+  <li>Organize knowledge by topic</li>
+  <li>Zoom in/out fluidly</li>
+  <li>Revisit contexts intact</li>
+  <li>Hold alternatives without collapsing them</li>
+</ul>
+
+<p>This architecture does the same—explicitly.</p>
+
+<hr />
+
+<h2 id="minimal-implementation-path">Minimal Implementation Path</h2>
+
+<p>You can start small:</p>
+
+<ol>
+  <li>Topic nodes as records with IDs</li>
+  <li>Maintain per-topic summaries (2–3 levels)</li>
+  <li>Store events append-only</li>
+  <li>Use pointers to assemble prompts</li>
+  <li>Add branching when needed</li>
+</ol>
+
+<p>The hard part isn’t infra.
+It’s <strong>respecting the distinction between memory and context</strong>.</p>
+
+<hr />
+
+<h2 id="closing-thought">Closing Thought</h2>
+
+<blockquote>
+  <p><strong>Logs remember everything.
+Topics organize meaning.
+Pointers decide relevance.</strong></p>
+</blockquote>
+
+<p>Agents don’t fail because they lack intelligence.
+They fail because we give them context the way machines prefer—not the way minds work.</p>
+
+    </content>
+  </div>
+</article>
+</main>
+      <footer><div class="wrap faint" style="display: flex; align-items: center;">
+  <a href="https://jffypak.com" class="plain ssr">
+    <img
+      src="/assets/logo.png"
+      alt="Jeff Park"
+      width="40"
+      height="40"
+      style="border-radius:50%; background:#FFE1C5"
+    />
+    </a>
+  <a href="https://github.com/jffypak" class="muted ssr" target="_blank">GitHub</a>
+  <a href="https://www.instagram.com/_tribecalledjeff/" class="muted" target="_blank">Instagram</a>
+</div></footer>
+    </div>
+
+    <script>
+    var darkMode = document.querySelector("#theme-toggle");
+
+    darkMode.addEventListener("click", function () {
+      document.body.classList.toggle("theme-dark");
+
+      let theme = "light";
+      if (document.body.classList.contains("theme-dark")) {
+        theme = "dark";
+      }
+      localStorage.setItem("theme", theme);
+    });
+    </script>
+
+    
+  </body>
+</html>

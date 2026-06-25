@@ -1,3 +1,7 @@
 [build]
   command = "jekyll build --trace"
   publish = "_site"
+
+# Scheduled builds are configured via Netlify UI or CLI using a Build Hook.
+# Create a Build Hook in Netlify (Site settings > Build & deploy > Build hooks)
+# then use a cron service or Netlify's scheduled functions to trigger it daily.
